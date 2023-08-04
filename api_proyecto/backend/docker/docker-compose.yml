@@ -1,0 +1,55 @@
+# Specifies the version of the docker-compose file format being used.
+version: "3.9"
+
+services:
+  mapasdb:
+    # Specifies the name of the container.
+    container_name: "MAPAS_API_DB"
+    image: postgres:13.0
+    volumes:
+      - ../data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=mapasdb
+      - POSTGRES_USER=mapasuser
+      - POSTGRES_PASSWORD=123456*ñ
+    # Specifies that the container should always be restarted if it stops.
+    restart: always
+    # Connects the container to the api_ps_network network.
+    networks:
+      - mapas_api_net
+
+  mapas_api_backend:
+    # Specifies the name of the container.
+    container_name: "MAPAS_API_BACKEND"
+    # Specifies the build context and Dockerfile path for building the backend container.
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    # Overrides the default command and starts the Django development server.
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    # Mounts the host directory ../politica_social/ to the container's /politica_social/ directory to provide access to the application code.
+    volumes:
+      - ../api_mapas:/api_mapas
+    # Maps the host port 8008 to the container port 8000 for accessing the Django development server.
+    ports:
+      - "8010:8000"
+    # Specifies the .env file to load environment variables from.
+    env_file:
+      - ./.env
+    # Connects the container to the api_ps_network network.
+    networks:
+      - mapas_api_net
+    # Specifies that the container should always be restarted if it stops.
+    #restart: always
+    # Specifies the dependency on the politica_social_db service, ensuring that the database container is started before the backend container.
+    depends_on:
+      - mapasdb
+
+networks:
+  # This network is created for the API services.
+  mapas_api_net:
+    # Specifies the network driver used for the network.
+    driver: bridge
