@@ -35,29 +35,8 @@ class syncAPIViewSet():
         latitud = obtenerCoordenadas['lat']
         longitud = obtenerCoordenadas['lng']
         try:
-            # Conectarse a la base de datos
-            connection = psycopg2.connect(db_config)
-
-            # Crear un cursor para ejecutar comandos SQL
-            cursor = connection.cursor()
-            
-            sql = "CREATE TABLE IF NOT EXISTS addresses (id SERIAL PRIMERY KEY,codigo_postal VARCHAR(100),calle VARCHAR(100),altura VARCHAR(100),partida VARCHAR(100),nomenclatura VARCHAR(100),latitud VARCHAR (100),longitud VARCHAR (100))"
-            cursor.execute(sql)
-
-            # Comando SQL para insertar el registro
-           
-            sql = "INSERT INTO api_address (codigo_postal,calle,altura,partida,nomenclatura,latitud,longitud) VALUES (%s, %s, %s, %s, %s, %s, %s)"  # Ajusta la tabla y los campos
-            valores = [codigo_postal,calle,altura,partida,nomenclatura,latitud,longitud]  # Ajusta los campos correspondientes
-
-            # Ejecutar el comando INSERT
-            cursor.execute(sql, valores)
-
-            # Confirmar la transacción (si estás utilizando una transacción explícita)
-            connection.commit()
-
-            # Cerrar el cursor y la conexión
-            cursor.close()
-            connection.close()
+            nueva_direccion = Address(codigo_postal, calle, altura, partida, nomenclatura, latitud, longitud)
+            nueva_direccion.save()
 
             print("Registro insertado correctamente.")
         except (Exception, psycopg2.Error) as error:
