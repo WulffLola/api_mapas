@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,7 @@ SECRET_KEY = 'django-insecure-z+92s5t=4#46(0hwrkz^lfdqss)80wp*j798st7m8l(b0n=6hc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -38,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    
+    'apps.api'   
 ]
 
 MIDDLEWARE = [
@@ -77,10 +78,15 @@ WSGI_APPLICATION = 'api_mapas.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mapasdb',
+        'USER': 'mapasuser',
+        'PASSWORD': '123456*ñ',
+        'HOST': '172.19.0.2',
+        'PORT': '5432'
     }
 }
+
 
 
 # Password validation
