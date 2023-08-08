@@ -13,7 +13,7 @@ class AdressesViewSet(viewsets.ModelViewSet):
 class syncAPIViewSet():
     with open('data.json') as archivo:
         datos = json.load(archivo)
-    for i in range(50000,100000) :
+    for i in range(107925,150000) :
         codigo_postal =  datos[i]['CP_8_D1']
         calle =  datos[i]['CALLE_45_D1']
         altura = datos[i]['PUERTA_5_D1']
