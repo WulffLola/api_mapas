@@ -9,11 +9,11 @@ import psycopg2
 class AdressesViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
-
+'''
 class syncAPIViewSet():
     with open('data.json') as archivo:
         datos = json.load(archivo)
-    for i in range(50000,100000) :
+    for i in range(0,100) :
         codigo_postal =  datos[i]['CP_8_D1']
         calle =  datos[i]['CALLE_45_D1']
         altura = datos[i]['PUERTA_5_D1']
@@ -69,3 +69,26 @@ class syncAPIViewSet():
                 if(buscarError.count()<1):
                     nuevo_error = Error(detail=error)
                     nuevo_error.save()
+'''
+                    
+                    
+class filterbyParams ():
+    def getData(codigo_postal = None, calle = None, altura = None):
+        calle = 'ALSINA'
+        altura = '65'
+        codigo_postal = '8000'
+        
+        if(calle != None) and (altura != None) and (codigo_postal != None):
+            buscar = Address.objects.filter(codigo_postal = codigo_postal, calle = calle, altura = altura)
+            print(buscar)
+            if(buscar.count()<1):
+                data = json.loads(data)
+            else:
+                print('error')
+                
+            if len(data) == 1:
+                return data[0]
+            return data
+        else:
+            print('error')
+                    
