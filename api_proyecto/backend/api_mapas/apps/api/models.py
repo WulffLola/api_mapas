@@ -11,10 +11,12 @@ class Address(models.Model):
     longitud = models.CharField(max_length=20,null=True)
     def __str__(self):
         data = {
-            self.id,
-            self.codigo_postal,
-            self.calle,
-            self.altura,
+            'ID' : self.id,
+            'CODIGO_POSTAL' : self.codigo_postal,
+            'CALLE' : self.calle,
+            'ALTURA' : self.altura,
+            'LATITUD' : self.latitud,
+            'LONGITUD' : self.longitud
         }
         return str(data)
 
