@@ -1,6 +1,7 @@
 from django.db import models
 
 class Address(models.Model):
+    id = models.AutoField(primary_key=True)
     codigo_postal = models.CharField(max_length = 100, null=True)
     calle = models.CharField(max_length = 100, null=True)
     altura = models.CharField(max_length = 100, null=True)
@@ -9,4 +10,16 @@ class Address(models.Model):
     latitud = models.CharField(max_length=20,null=True)
     longitud = models.CharField(max_length=20,null=True)
     def __str__(self):
-        return self.street
+        data = {
+            self.id,
+            self.codigo_postal,
+            self.calle,
+            self.altura,
+        }
+        return str(data)
+
+class Error(models.Model):
+    id = models.AutoField(primary_key=True)
+    detail = models.TextField(null=False)
+    def __str__(self):
+        return self.detail
