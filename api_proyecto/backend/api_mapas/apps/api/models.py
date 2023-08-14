@@ -23,5 +23,16 @@ class Address(models.Model):
 class Error(models.Model):
     id = models.AutoField(primary_key=True)
     detail = models.TextField(null=False)
+    codigo_postal_conf = models.CharField(max_length = 100, null=True)
+    calle_conf = models.CharField(max_length = 100, null=True)
+    altura_conf = models.CharField(max_length = 100, null=True)
+    
     def __str__(self):
-        return self.detail
+        data = {
+            'ID' : self.id,
+            'DETALLE' : self.detail,
+            'CODIGO_POSTAL' : self.codigo_postal_conf,
+            'CALLE' : self.calle_conf,
+            'ALTURA' : self.altura_conf,
+        }
+        return str(data)
