@@ -26,7 +26,6 @@ class Error(models.Model):
     codigo_postal_conf = models.CharField(max_length = 100, null=True)
     calle_conf = models.CharField(max_length = 100, null=True)
     altura_conf = models.CharField(max_length = 100, null=True)
-    
     def __str__(self):
         data = {
             'ID' : self.id,
