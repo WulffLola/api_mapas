@@ -7,10 +7,10 @@ from apps.api.views import filterbyParams, getErrorAddress,getIncompletesAddress
 
 router = DefaultRouter()
 router.register(r'addresses', views.AdressesViewSet)
-router.register(r'syncAPI',views.AdressesViewSet)
+router.register(r'getAddress',views.AdressesViewSet, basename='getAddress')
 router.register(r'filterbyParams',views.filterbyParams, basename='filterbyParams')
 router.register(r'getErrorAddress',views.getErrorAddress, basename='getErrorAddress')
-router.register(r'getIncompletesAddress',views.getIncompletesAddress, basename='getErrorAddress')
+router.register(r'getIncompletesAddress',views.getIncompletesAddress, basename='getIncompletesAddress')
 
 
 urlpatterns = [ 
