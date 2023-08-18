@@ -10,63 +10,87 @@ from django.db.models import Count
 class AdressesViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
+    
 class syncAPIViewSet(viewsets.ViewSet):
+    """   
+                rows= Address.objects.all()
+                rows.delete()
+                rows= Error.objects.all()
+                rows.delete()
     """
-        rows= Address.objects.all()
-        rows.delete()
-    """
-    def sync_addresses(sef, request):
+    def normalizarDireccion (self,row):
+        with open('CALLES_CONFLICTIVAS.json') as file:
+            datos = json.load(file)
+            datos = datos['data']
+            for x in datos:
+                if(x['CALLE_CONFLICTIVA'] == row['CALLE_45_D1']) and (x['CODIGO_POSTAL'] == row['CP_8_D1']):
+                    if(x['CALLE_NORMALIZADA'] != ''):
+                        row['CALLE_45_D1'] = x['CALLE_NORMALIZADA']                    
+        return row
+
+    def existeDireccion(self,row):
+        buscarDireccion = Address.objects.filter(codigo_postal=row['CP_8_D1']).filter(calle=row['CALLE_45_D1']).filter(altura=row['PUERTA_5_D1'])
+        if(buscarDireccion.count()>0):
+            return True
+        return False
+    
+    def obtenerDatosAPI(self,url):
+        obtenerCoordenadas = requests.get(url)
+        obtenerCoordenadas = json.loads(obtenerCoordenadas.text)
+        return obtenerCoordenadas
+    
+    def insertarRegistro(self,row,i):
+        try:
+            nueva_direccion = Address(codigo_postal = row['CP_8_D1'], calle = row['CALLE_45_D1'], altura = row['PUERTA_5_D1'], partida = row['PARTIDA'], nomenclatura = row['NOMENCLATURA_CAT'], latitud = row['LATITUD'], longitud = row['LONGITUD'])
+            nueva_direccion.save()
+            print("Registro insertado correctamente." + " Contador: " +str(i))    
+        except (Exception, psycopg2.Error) as error:
+            print("Error al insertar el registro:", error)
+            
+    def insertarError(self,row,error,i):
+        buscarError = Error.objects.filter(codigo_postal=row['CP_8_D1']).filter(calle=row['CALLE_45_D1']).filter(altura=row['PUERTA_5_D1']).filter(detail = error)
+        if(buscarError.count()<1):
+            try:
+                nuevo_error = Error(detail = error, codigo_postal = row['CP_8_D1'], calle = row['CALLE_45_D1'], altura = row['PUERTA_5_D1'], partida = row['PARTIDA'], nomenclatura = row['NOMENCLATURA_CAT'])
+                nuevo_error.save()
+                print("Error insertado correctamente."  " Contador: " +str(i))    
+            except (Exception, psycopg2.Error) as error:
+                print("Error al insertar el error:", error)
+        
+    def sync_addresses(self, request):
+        repetidos = 5845
         with open('data.json') as archivo:
             datos = json.load(archivo)
-        for i in range(0,len(datos)) :
-            codigo_postal =  datos[i]['CP_8_D1']
-            calle =  datos[i]['CALLE_45_D1']
-            altura = datos[i]['PUERTA_5_D1']
-            partida = datos[i]['PARTIDA']
-            nomenclatura = datos[i]['NOMENCLATURA_CAT']
-            nomenclatura = nomenclatura.replace(" ","")
-            localidad = datos[i]['LOCALIDAD_30_D1']        
-            #Aca vamos a comprobar que la direccion no este cargada ya.
-            if(calle != None) and (altura != None) and (codigo_postal != None) and (localidad !=None): 
-                buscar = Address.objects.filter(codigo_postal=codigo_postal,calle=calle,altura=altura)
-                if(buscar.count()==0): #No hay resultados, buscamos Lat y Lng.
-                        toSearch = 'C=' + str(calle) + '&A=' + str(altura) + '&P=' + str(codigo_postal)
-                        obtenerCoordenadas = requests.get('http://128.0.203.119/intranet/geo/cuimCalles.php?'+toSearch)
-                        obtenerCoordenadas = json.loads(obtenerCoordenadas.text)
-                        latitud = obtenerCoordenadas['lat']
-                        longitud = obtenerCoordenadas['lng']
-                        if(latitud=='' or longitud ==''):
-                            #Consultamos en API web
-                                toSearch = str(calle) + "+" + str(altura) + "+" + str(localidad)
-                                obtenerCoordenadasWeb = requests.get('https://nominatim.openstreetmap.org/search.php?q='+toSearch+'&format=json')
-                                obtenerCoordenadasWeb = json.loads(obtenerCoordenadasWeb.text)
-                                if(len(obtenerCoordenadasWeb)>0):
-                                    obtenerCoordenadasWeb = obtenerCoordenadasWeb[0]
-                                    latitud = obtenerCoordenadasWeb['lat']
-                                    longitud = obtenerCoordenadasWeb['lon'] 
-                                    nueva_direccion = Address(codigo_postal = codigo_postal, calle = calle, altura = altura, partida = partida, nomenclatura = nomenclatura, latitud = latitud, longitud = longitud)
-                                    nueva_direccion.save()
-                                    print("Registro insertado correctamente." + " Contador: " +str(i))
-                                else:
-                                    #No obtiene de web, insertamos en el error pero antes verificamos que no este el error en la db ya
-                                    error = "ERROR AL OBTENER LAT Y LNG DE LA DIRECCION."
-                                    buscarError = Error.objects.filter(calle_conf=calle).filter(altura_conf = altura)
-                                    if(buscarError.count()<1):
-                                        nuevo_error = Error(detail=error, codigo_postal_conf=codigo_postal, calle_conf=calle, altura_conf=altura)
-                                        nuevo_error.save()
-                        try:
-                            nueva_direccion = Address(codigo_postal = codigo_postal, calle = calle, altura = altura, partida = partida, nomenclatura = nomenclatura, latitud = latitud, longitud = longitud)
-                            nueva_direccion.save()
-                            print("Registro insertado correctamente." + " Contador: " +str(i))
-                        except (Exception, psycopg2.Error) as error:
-                            print("Error al insertar el registro:", error)
-            else:
-                    #Aca vamos a comprobar que el error no este en la cola
-                    error = "NO HAY DATOS SUFICIENTES PARA BUSCAR LAT Y LNG." 
-                    buscarError = Error.objects.filter(calle_conf=calle).filter(altura_conf = altura)
-                    if(buscarError.count()<1):
-                        nuevo_error = Error(detail=error, codigo_postal_conf=codigo_postal, calle_conf=calle, altura_conf=altura)
-                        nuevo_error.save() 
+            for i in range(32000,32000) :                
+                row = datos[i]
+                if(row['CP_8_D1'] is not None) and (row['CALLE_45_D1'] is not None) and (row['PUERTA_5_D1'] is not None) and (row['LOCALIDAD_30_D1'] is not None):
+                    row = self.normalizarDireccion(row)
+                    if self.existeDireccion(row) == False:
+                        toSearch = 'C=' + str(row['CALLE_45_D1']) + '&A=' + str(row['PUERTA_5_D1']) + '&P=' + str(row['CP_8_D1'])
+                        data = self.obtenerDatosAPI('http://128.0.203.119/intranet/geo/cuimCalles.php?'+toSearch)
+                        latitud = data['lat']
+                        longitud = data['lng']
+                        if (latitud != '') and (longitud != ''):
+                            row['LATITUD'] = latitud
+                            row['LONGITUD'] = longitud
+                            self.insertarRegistro(row,i)
+                        else:
+                            toSearch = str(row['CALLE_45_D1']) + "+" + str(row['PUERTA_5_D1']) + "+" + str(row['LOCALIDAD_30_D1'])
+                            data = self.obtenerDatosAPI('https://nominatim.openstreetmap.org/search.php?q='+toSearch+'&format=json')
+                            if(len(data)>0):
+                                obtenerCoordenadasWeb = data[0]
+                                row['LATITUD'] = obtenerCoordenadasWeb['lat']
+                                row['LONGITUD'] = obtenerCoordenadasWeb['lon'] 
+                                self.insertarRegistro(row,i)
+                            else:
+                                error = "NO SE PUDO GEOLOCALIZAR"
+                                self.insertarError(row,error,i)
+                    else:
+                        repetidos = repetidos + 1
+                else:
+                    error = "DATOS INCOMPLETOS"
+                    self.insertarError(row,error,i)  
+            print('Hay repetidos: ' + str(repetidos))
     
 class filterbyParams (viewsets.ViewSet):
     # queryset = Address.objects.all()
