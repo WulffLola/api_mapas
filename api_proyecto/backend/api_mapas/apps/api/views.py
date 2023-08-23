@@ -61,7 +61,7 @@ class syncAPIViewSet(viewsets.ViewSet):
         repetidos = 5845
         with open('data.json') as archivo:
             datos = json.load(archivo)
-            for i in range(32000,32000) :                
+            for i in range(154055,len(datos)) :                
                 row = datos[i]
                 if(row['CP_8_D1'] is not None) and (row['CALLE_45_D1'] is not None) and (row['PUERTA_5_D1'] is not None) and (row['LOCALIDAD_30_D1'] is not None):
                     row = self.normalizarDireccion(row)
