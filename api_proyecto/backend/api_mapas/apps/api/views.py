@@ -53,15 +53,16 @@ class syncAPIViewSet(viewsets.ViewSet):
             try:
                 nuevo_error = Error(detail = error, codigo_postal = row['CP_8_D1'], calle = row['CALLE_45_D1'], altura = row['PUERTA_5_D1'], partida = row['PARTIDA'], nomenclatura = row['NOMENCLATURA_CAT'])
                 nuevo_error.save()
-                print("Error insertado correctamente."  " Contador: " +str(i))    
+                print("Error insertado."  " Contador: " +str(i))    
             except (Exception, psycopg2.Error) as error:
                 print("Error al insertar el error:", error)
         
     def sync_addresses(self, request):
-        repetidos = 5845
+        repetidos = 0
         with open('data.json') as archivo:
             datos = json.load(archivo)
-            for i in range(154055,len(datos)) :                
+            for i in range(0,len(datos)) :                
+                print("Rg. "+str(i))
                 row = datos[i]
                 if(row['CP_8_D1'] is not None) and (row['CALLE_45_D1'] is not None) and (row['PUERTA_5_D1'] is not None) and (row['LOCALIDAD_30_D1'] is not None):
                     row = self.normalizarDireccion(row)
@@ -95,9 +96,9 @@ class syncAPIViewSet(viewsets.ViewSet):
 class filterbyParams (viewsets.ViewSet):
     # queryset = Address.objects.all()
     serializer_class = AddressSerializer
-    def list(self, request, codigo_postal=None, calle=None, altura=None):
+    def list(self, request, codigo_postal='null', calle='null', altura='null'):
         response = []        
-        if(calle != None) and (altura != None) and (codigo_postal != None):
+        if(calle != 'null') and (altura != 'null') and (codigo_postal != 'null'):
             buscar = Address.objects.filter(codigo_postal = codigo_postal.upper(), calle = calle.upper(), altura = altura).first()
             if(buscar):
                 response = {
@@ -113,7 +114,7 @@ class filterbyParams (viewsets.ViewSet):
                     }
                 }
             else:
-                res= {
+                response = {
                     'code': 404,
                     'succcess' : False,
                     'error' : "No se encontraron registros que coincidan con la búsqueda."
