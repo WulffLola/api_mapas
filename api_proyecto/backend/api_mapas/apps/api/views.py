@@ -18,7 +18,7 @@ class syncAPIViewSet(viewsets.ViewSet):
                 rows= Error.objects.all()
                 rows.delete()
     """
-    def normalizarDireccion (self,row):
+    def normalizarDireccion (row):
         with open('CALLES_CONFLICTIVAS.json') as file:
             datos = json.load(file)
             datos = datos['data']
@@ -28,18 +28,18 @@ class syncAPIViewSet(viewsets.ViewSet):
                         row['CALLE_45_D1'] = x['CALLE_NORMALIZADA']                    
         return row
 
-    def existeDireccion(self,row):
+    def existeDireccion(row):
         buscarDireccion = Address.objects.filter(codigo_postal=row['CP_8_D1']).filter(calle=row['CALLE_45_D1']).filter(altura=row['PUERTA_5_D1'])
         if(buscarDireccion.count()>0):
             return True
         return False
     
-    def obtenerDatosAPI(self,url):
+    def obtenerDatosAPI(url):
         obtenerCoordenadas = requests.get(url)
         obtenerCoordenadas = json.loads(obtenerCoordenadas.text)
         return obtenerCoordenadas
     
-    def insertarRegistro(self,row,i):
+    def insertarRegistro(row,i):
         try:
             nueva_direccion = Address(codigo_postal = row['CP_8_D1'], calle = row['CALLE_45_D1'], altura = row['PUERTA_5_D1'], partida = row['PARTIDA'], nomenclatura = row['NOMENCLATURA_CAT'], latitud = row['LATITUD'], longitud = row['LONGITUD'])
             nueva_direccion.save()
@@ -47,7 +47,7 @@ class syncAPIViewSet(viewsets.ViewSet):
         except (Exception, psycopg2.Error) as error:
             print("Error al insertar el registro:", error)
             
-    def insertarError(self,row,error,i):
+    def insertarError(row,error,i):
         buscarError = Error.objects.filter(codigo_postal=row['CP_8_D1']).filter(calle=row['CALLE_45_D1']).filter(altura=row['PUERTA_5_D1']).filter(detail = error)
         if(buscarError.count()<1):
             try:
@@ -94,11 +94,20 @@ class syncAPIViewSet(viewsets.ViewSet):
             print('Hay repetidos: ' + str(repetidos))
     
 class filterbyParams (viewsets.ViewSet):
-    # queryset = Address.objects.all()
     serializer_class = AddressSerializer
     def list(self, request, codigo_postal='null', calle='null', altura='null'):
         response = []        
         if(calle != 'null') and (altura != 'null') and (codigo_postal != 'null'):
+            row = {
+                    'CALLE_45_D1' : calle,
+                    'PUERTA_5_D1' : altura,
+                    'CP_8_D1' : codigo_postal,
+                    'LATITUD' : '',
+                    'LONGITUD' : '',
+                    'PARTIDA':'',
+                    'NOMENCLATURA_CAT':''
+                }
+            row = syncAPIViewSet.normalizarDireccion(row)
             buscar = Address.objects.filter(codigo_postal = codigo_postal.upper(), calle = calle.upper(), altura = altura).first()
             if(buscar):
                 response = {
@@ -114,11 +123,57 @@ class filterbyParams (viewsets.ViewSet):
                     }
                 }
             else:
-                response = {
-                    'code': 404,
-                    'succcess' : False,
-                    'error' : "No se encontraron registros que coincidan con la búsqueda."
+                #Aca podemos buscar en el de Marcelo
+                toSearch = 'C=' + str(row['CALLE_45_D1']) + '&A=' + str(row['PUERTA_5_D1']) + '&P=' + str(row['CP_8_D1'])
+                data = syncAPIViewSet.obtenerDatosAPI('http://128.0.203.119/intranet/geo/cuimCalles.php?'+toSearch)
+                latitud = data['lat']
+                longitud = data['lng']
+                if (latitud != '') and (longitud != ''):
+                    row['LATITUD'] = latitud
+                    row['LONGITUD'] = longitud
+                    syncAPIViewSet.insertarRegistro(row,'A')
+                    buscar = Address.objects.filter(codigo_postal = codigo_postal.upper(), calle = calle.upper(), altura = altura).first()
+                    response = {
+                    'code': 200,
+                    'succcess' : True,
+                    'data' : {
+                            'ID' : buscar.id,
+                            'CODIGO_POSTAL' : buscar.codigo_postal,
+                            'CALLE' : buscar.calle,
+                            'ALTURA' : buscar.altura,
+                            'LATITUD' : buscar.latitud,
+                            'LONGITUD' : buscar.longitud
+                    }
                 }
+                else:
+                    toSearch = str(row['CALLE_45_D1']) + "+" + str(row['PUERTA_5_D1']) + "+" + str(row['LOCALIDAD_30_D1'])
+                    data = syncAPIViewSet.obtenerDatosAPI('https://nominatim.openstreetmap.org/search.php?q='+toSearch+'&format=json')
+                    if(len(data)>0):
+                        obtenerCoordenadasWeb = data[0]
+                        row['LATITUD'] = obtenerCoordenadasWeb['lat']
+                        row['LONGITUD'] = obtenerCoordenadasWeb['lon'] 
+                        syncAPIViewSet.insertarRegistro(row,'A')
+                        buscar = Address.objects.filter(codigo_postal = codigo_postal.upper(), calle = calle.upper(), altura = altura).first()
+                        response = {
+                            'code': 200,
+                            'succcess' : True,
+                            'data' : {
+                                    'ID' : buscar.id,
+                                    'CODIGO_POSTAL' : buscar.codigo_postal,
+                                    'CALLE' : buscar.calle,
+                                    'ALTURA' : buscar.altura,
+                                    'LATITUD' : buscar.latitud,
+                                    'LONGITUD' : buscar.longitud
+                            }
+                        }
+                    else:
+                        error = "NO SE PUDO GEOLOCALIZAR"
+                        syncAPIViewSet.insertarError(row,error,'A')
+                        response = {
+                            'code': 404,
+                            'succcess' : False,
+                            'error' : "No se encontraron registros que coincidan con la búsqueda."
+                        }
         else:
             response = {
                     'code': 400,
