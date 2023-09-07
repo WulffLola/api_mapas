@@ -138,7 +138,7 @@ function App() {
             {comercios?.map((e,i) =>
               <Marker key={i} position={[e?.latitud, e?.longitud]}>
               <Popup>
-                <center><strong> {e?.NOMBRE_FANTASIA.toUpperCase()} </strong> <br/> {e?.DOMICILIO.toUpperCase()}</center>
+                <center><strong> {e?.NOMBRE_FANTASIA.toUpperCase()} </strong> <br/> {e?.DOMICILIO.toUpperCase().split('(')[0]}</center>
               </Popup>
             </Marker>
             )};
