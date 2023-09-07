@@ -82,6 +82,11 @@ function App() {
 
   }
 
+  const handlerChange = (e) =>{
+    setCalle(e.target.innerHTML)
+
+  } 
+
  
 
   useEffect(() => {
@@ -160,13 +165,14 @@ function App() {
             <FormControl w="1000">
               <FormLabel textAlign="center">Calle</FormLabel>
               <AutoComplete w = "full">
-                <AutoCompleteInput variant="filled" color="grey" w = "100%" style={{borderColor: "lightgray", borderRadius: "5px" }}/>
+                <AutoCompleteInput variant="filled" color="grey" w = "100%" style={{borderColor: "lightgray", borderRadius: "5px" }} onChange={(e) => handlerChange(e)}/>
                 <AutoCompleteList color="black" bg = "white">
                   {calles.map((country, cid) => (
                     <AutoCompleteItem
                     key={`option-${cid}`}    
                       value={country.calle}
                       textTransform="capitalize"
+                      onClick={(e) => handlerChange(e)}
                       bg="white"
                     >
                       {country.calle}
