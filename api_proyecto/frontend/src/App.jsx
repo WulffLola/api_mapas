@@ -1,6 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import {Container,Row,Col,Form,Button} from 'react-bootstrap';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker} from 'react-leaflet';
+import {
+  Flex,
+  FormControl, 
+  FormHelperText,
+  FormLabel 
+  } from "@chakra-ui/react";
+import {
+    AutoComplete,
+    AutoCompleteInput,
+    AutoCompleteItem,
+    AutoCompleteList,
+  } from "@choc-ui/chakra-autocomplete";
 
 function App() {
 
@@ -33,9 +45,22 @@ function App() {
   const [categorias, setCategorias] = useState()
   const [subCategorias, setSubcategorias] = useState()
   const [posicionInicial, setPosicionInicial] = useState()
+  const [detalle, setDetalle] = useState('')
+  const [calle, setCalle] = useState('')
+  const [altura, setAltura] = useState("")
+  const [formData, setFormData] = useState({
+    detalle: "",
+    calle: "",
+    altura: ""
+  })
+  const [calles, setCalles] = useState()
 
   const getSubcategorias = async (e) => {
     await getAPI ('https://bahia.gob.ar/comercios/datos/comerciosact.php?ac='+e.target.value,setSubcategorias,false)
+  }
+
+  const getCalles = async () => {
+    await getAPI ('http://128.0.204.46:8010/listUniqueAddressNames/',setCalles)
   }
 
   const getComercios = async () => {
@@ -47,12 +72,24 @@ function App() {
     await getAPI ('http://128.0.204.46:8010/filterbyParams/8000/BLANDENGUES/152',setPosicionInicial)
     setCategorias(arrayCategorias);   
   }
+  
+  const submitForm = async() => {
+    if([calle, altura, detalle].some((value) => value.length !== 0)){
+      console.log("si")
+      const postForm = await fetch('http://128.0.204.46:8010/registerOficio/', {method: 'POST', body: JSON.stringify(data = {calle: calle, altura: altura, detalle: detalle})})
+      console.log(postForm.status)
+    }
+
+  }
+
+ 
 
   useEffect(() => {
     getInformacionInicial()
+    getCalles()
   }, [])
 
-  if(!categorias || !posicionInicial ){
+  if(!categorias || !posicionInicial || !calles){
     return null
   }
   return (
@@ -107,6 +144,45 @@ function App() {
             )};
           </MapContainer>
         </Row>
+        <Row>
+          <h3 className='m-3'>FORMULARIO DE OFICIOS</h3>
+        </Row>
+        <Form>
+          <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+            <Form.Label>Fecha</Form.Label>
+            <Form.Control type = "date" />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
+            <Form.Label>Detalle</Form.Label>
+            <Form.Control type = "text" onChange={(event) => setDetalle(event.target.value)}/>
+          </Form.Group>
+            <Flex justify="start" align="center" w="full">
+            <FormControl w="1000">
+              <FormLabel textAlign="center">Calle</FormLabel>
+              <AutoComplete w = "full">
+                <AutoCompleteInput variant="filled" color="grey" w = "100%" style={{borderColor: "lightgray", borderRadius: "5px" }}/>
+                <AutoCompleteList color="black" bg = "white">
+                  {calles.map((country, cid) => (
+                    <AutoCompleteItem
+                    key={`option-${cid}`}    
+                      value={country.calle}
+                      textTransform="capitalize"
+                      bg="white"
+                    >
+                      {country.calle}
+                    </AutoCompleteItem>
+                  ))}
+                </AutoCompleteList>
+              </AutoComplete>
+              <FormHelperText></FormHelperText>
+            </FormControl>
+          </Flex>
+          <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
+            <Form.Label>Altura</Form.Label>
+            <Form.Control type = "number"  onChange={(event) => setAltura(event.target.value)}/>
+          </Form.Group>
+          <Button as="input" type="button" value="Submit" onClick={submitForm} />{' '}
+        </Form> 
       </Container>      
     </div>
   );
