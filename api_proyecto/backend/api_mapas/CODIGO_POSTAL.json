@@ -2,5 +2,9 @@
     {
         "CODIGO_POSTAL": "8000",
         "CIUDAD" : "BAHIA BLANCA"
+    },
+    {
+        "CODIGO_POSTAL": "XXXX",
+        "CIUDAD" : "PEPE PEPE"
     }
 ]
