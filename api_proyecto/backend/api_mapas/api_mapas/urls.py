@@ -13,7 +13,7 @@ router.register(r'getErrorAddress',views.getErrorAddress, basename='getErrorAddr
 router.register(r'getIncompletesAddress',views.getIncompletesAddress, basename='getIncompletesAddress')
 router.register(r'oficios', views.OficiosViewSet, basename='getOficios')
 router.register(r'listUniqueAddressNames', views.filterbyParams, basename='listUniqueAddressNames')
-router.register(r'registerOficio', views.OficiosViewSet, basename='registerOficio')
+router.register(r'^registerOficio/$', views.OficiosViewSet, basename='registerOficio')
 
 
 urlpatterns = [ 

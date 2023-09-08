@@ -22,6 +22,13 @@ class syncAPIViewSet(viewsets.ViewSet):
                     if(x['CALLE_NORMALIZADA'] != ''):
                         row['CALLE_45_D1'] = x['CALLE_NORMALIZADA']                    
         return row
+    
+    def obtenerCiudad (codigo_postal):
+        with open('CODIGO_POSTAL.json') as file:
+            datos = json.load(file)
+            for x in datos:
+                if(x['CODIGO_POSTAL'] == codigo_postal):
+                    return x['CIUDAD']
 
     def existeDireccion(row):
         buscarDireccion = Address.objects.filter(codigo_postal=row['CP_8_D1']).filter(calle=row['CALLE_45_D1']).filter(altura=row['PUERTA_5_D1'])
@@ -141,7 +148,10 @@ class filterbyParams (viewsets.ViewSet):
                     }
                 }
                 else:
-                    toSearch = str(row['CALLE_45_D1']) + "+" + str(row['PUERTA_5_D1']) + "+" + str(row['LOCALIDAD_30_D1'])
+                    #Buscamos en el JSON de Codigos Postales, el CP correspondiente y devolvemos la ciudad para poder geolocalizar.
+                    ciudad = syncAPIViewSet.obtenerCiudad(row['CP_8_D1'])
+                    print (ciudad)
+                    toSearch = str(row['CALLE_45_D1']) + "+" + str(row['PUERTA_5_D1']) + "+" + str(ciudad)
                     data = syncAPIViewSet.obtenerDatosAPI('https://nominatim.openstreetmap.org/search.php?q='+toSearch+'&format=json')
                     if(len(data)>0):
                         obtenerCoordenadasWeb = data[0]
