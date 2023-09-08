@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from .serializer import AddressSerializer, OficiosSerializer
+from django.core.serializers import serialize
 from .models import Address,Error, Oficios
 import requests
 import json 
@@ -178,7 +179,7 @@ class filterbyParams (viewsets.ViewSet):
 
     def listUniqueAddressNames(self,request):
         addressnames = []
-        query = Address.objects.all().values('calle').annotate(count=Count('id')).order_by('-count').filter(count__gt=1)
+        query = Address.objects.all().values('calle','codigo_postal').annotate(count=Count('id')).order_by('-count').filter(count__gt=1)
         for i in range(0,50):
             addressnames.append(query[i])
         if(len(addressnames)>0):
@@ -195,38 +196,7 @@ class filterbyParams (viewsets.ViewSet):
                 }
         return Response(data=response, status=response.get('code'))
     
-    def registerOficio(self,request):
-        res = {}
-        body_unicode = request.body.decode('utf-8')
-        body = json.loads(body_unicode)
-        response = filterbyParams.search(filterbyParams,'','8000',body['calle'],body['altura'])
-        if response.data['code'] == 200 :
-            data = response.data['data']
-            buscarOficioDuplicado = Oficios.objects.filter(calle=body['calle']).filter(altura=body['altura']).filter(detalle=body['detalle'])
-            if(buscarOficioDuplicado.count()<1):
-                try:
-                    nuevo_oficio = Oficios(fecha = '2023-09-20',tipo = 'OFICIO',detalle=body['detalle'],calle=body['calle'],altura=body['altura'],estado='CREADO',id_hoja_ruta = -1,latitud = data['LATITUD'], longitud = data['LONGITUD'])
-                    nuevo_oficio.save()
-                    print("Oficio insertado")  
-                    res = {
-                        'code': 200,
-                        'succcess' : True,
-                        'msg' : "Oficio cargado con éxito."
-                    }  
-                except (Exception, psycopg2.Error) as error:
-                    print("Error al insertar el oficio:", error)
-                    res = {
-                        'code': 401,
-                        'succcess' : False,
-                        'error' : "Error al insertar. Error: "+str(error)
-                    }
-        else:
-            res = {
-                'code': 401,
-                'succcess' : False,
-                'error' : "Direccion no se puede geolocalizar."
-            }
-        return Response(data=res, status=res.get('code'))
+   
                 
 class getErrorAddress (viewsets.ViewSet):
     def list(self, request):
@@ -271,24 +241,62 @@ class getIncompletesAddress (viewsets.ViewSet):
             return Response(data=res, status=res.get('code'))
         
 class OficiosViewSet(viewsets.ViewSet):
-    def list(self, request):
-            response = []        
-            buscar = Oficios.objects.filter(id_hoja_ruta='-1')
-            if(buscar.count()>0): #Tenemos registros que mostrar, los tenemos que recorrer.
-                for x in buscar :
-                    obj = {
-                        'ID' : x['id'],
+    def registerOficio(self,request):
+        res = {}
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+        response = filterbyParams.search(filterbyParams,'',body['codigo_postal'],body['calle'],body['altura'])
+        if response.data['code'] == 200 :
+            data = response.data['data']
+            buscarOficioDuplicado = Oficios.objects.filter(calle=body['calle']).filter(altura=body['altura']).filter(detalle=body['detalle'])
+            if(buscarOficioDuplicado.count()<1):
+                try:
+                    nuevo_oficio = Oficios(fecha = '2023-09-20',tipo = 'OFICIO',detalle=body['detalle'],calle=body['calle'],altura=body['altura'],estado='CREADO',id_hoja_ruta = -1,latitud = data['LATITUD'], longitud = data['LONGITUD'])
+                    nuevo_oficio.save()
+                    print("Oficio insertado")  
+                    res = {
+                        'code': 200,
+                        'succcess' : True,
+                        'msg' : "Oficio cargado con éxito."
+                    }  
+                except (Exception, psycopg2.Error) as error:
+                    print("Error al insertar el oficio:", error)
+                    res = {
+                        'code': 401,
+                        'succcess' : False,
+                        'error' : "Error al insertar. Error: "+str(error)
                     }
-                    response.append(obj)
-                res = {
-                    'code': 200,
-                    'succcess' : True,
-                    'data' : response
+        else:
+            res = {
+                'code': 401,
+                'succcess' : False,
+                'error' : "Direccion no se puede geolocalizar."
+            }
+        return Response(data=res, status=res.get('code'))
+    
+    def list(self, request):    
+        elms = []
+        buscar = Oficios.objects.filter(id_hoja_ruta=-1).values('id','fecha','tipo','detalle','calle','altura','estado','latitud','longitud')
+        if(buscar.count()>0): #Tenemos registros que mostrar, los tenemos que recorrer.
+            for i in buscar:
+                obj = {
+                    'ID' :i['id'],
+                    'CODIGO_POSTAL' : '8000',
+                    'CALLE' :i['calle'],
+                    'ALTURA' :i['altura'],
+                    'LATITUD' :i['latitud'],
+                    'LONGITUD' :i['longitud']
                 }
-            else:
-                res = {
-                    'code': 404,
-                    'succcess' : False,
-                    'message' : 'NO SE ENCONTRARON OFICIOS SIN ASIGNAR.',
-                }
-            return Response(data=res, status=res.get('code'))
+                elms.append(obj)
+            res = {
+                'code': 200,
+                'succcess' : True,
+                'data' : elms
+            }
+        else:
+            res = {
+                'code': 404,
+                'succcess' : False,
+                'message' : 'NO SE ENCONTRARON OFICIOS SIN ASIGNAR.',
+            }
+        return Response(data=res, status=res.get('code'))
