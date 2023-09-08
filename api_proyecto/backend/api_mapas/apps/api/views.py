@@ -7,6 +7,8 @@ import json
 import psycopg2 
 from rest_framework.response import Response
 from django.db.models import Count
+import math
+
 
 class AdressesViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
@@ -58,6 +60,41 @@ class syncAPIViewSet(viewsets.ViewSet):
                 print("Error insertado."  " Contador: " +str(i))    
             except (Exception, psycopg2.Error) as error:
                 print("Error al insertar el error:", error)
+    
+    def ordenarDirecciones (self,request):
+        print(request)
+        """
+        body = json.loads(body_unicode)
+        direcciones = body['data']
+        latitud_origen = "-38.7162124291"
+        longitud_orgen = "-62.2745471692"
+        data = []
+        print (direcciones)
+        for x in direcciones :
+            id = x['id']
+            latitud = x['latitud']
+            longitud = x['longitud']
+            distancia = math.sqrt((longitud-longitud_orgen)**2+(latitud-latitud_origen)**2)
+            item = {
+                'ID' : id,
+                'DISTANCIA_AL_ORIGEN' : distancia
+            }
+            data.append(item)
+            
+        #Una vez calculadas las distancias entre puntos, las ordenamos de menor a mayor. 
+            
+        sorted(data, key=lambda x: x['DISTANCIA_AL_ORIGEN'])  
+        
+        res = {
+            'code': 200,
+            'succcess' : True,
+            'data' : data
+        }            
+            
+        return Response(data=res, status=res.get('code'))
+        """
+        return Response(data=[], status=200)
+
         
     def sync_addresses(self, request):
         repetidos = 0
@@ -205,9 +242,7 @@ class filterbyParams (viewsets.ViewSet):
                     'error' : "No se encontraron calles."
                 }
         return Response(data=response, status=response.get('code'))
-    
-   
-                
+                 
 class getErrorAddress (viewsets.ViewSet):
     def list(self, request):
         response = []        
@@ -261,7 +296,7 @@ class OficiosViewSet(viewsets.ViewSet):
             buscarOficioDuplicado = Oficios.objects.filter(calle=body['calle']).filter(altura=body['altura']).filter(detalle=body['detalle'])
             if(buscarOficioDuplicado.count()<1):
                 try:
-                    nuevo_oficio = Oficios(fecha = '2023-09-20',tipo = 'OFICIO',detalle=body['detalle'],calle=body['calle'],altura=body['altura'],estado='CREADO',id_hoja_ruta = -1,latitud = data['LATITUD'], longitud = data['LONGITUD'])
+                    nuevo_oficio = Oficios(fecha = body['fecha'],tipo = 'OFICIO',detalle=body['detalle'],calle=body['calle'],altura=body['altura'],estado='CREADO',id_hoja_ruta = -1,latitud = data['LATITUD'], longitud = data['LONGITUD'])
                     nuevo_oficio.save()
                     print("Oficio insertado")  
                     res = {
