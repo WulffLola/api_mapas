@@ -17,6 +17,41 @@ import {
 
 function CargaOficios() {
 
+  const correctForm = () => toast.success('Formulario enviado correctamente.', {
+    position: "bottom-right",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+    });
+
+  const incorrectDate = () => toast.warn('Verifique que los campos sean correctos.', {
+    position: "bottom-right",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+    });
+
+  const emptyFields = () => toast.error('Los campos deben ser validos.', {
+    position: "bottom-right",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+    });
+
+  const date = new Date().toISOString().slice(0,10)
+
   const getAPI = async (url,setEstado,python = true) => {
     //El parametro opcional PYTHON recibe un booleano que indica si la API a la que consultamos es 
     //la nuestra en Python o es una externa (Marcelo / PHP). Por eso, la forma de setear el estado es diferente.
@@ -29,7 +64,7 @@ function CargaOficios() {
   const [calle, setCalle] = useState('')
   const [codigoPostal, setCodigoPostal] = useState('')
   const [altura, setAltura] = useState("")
-  const [fecha, setFecha] = useState('')
+  const [fecha, setFecha] = useState(date)
   const [formData, setFormData] = useState({
     detalle: "",
     calle: "",
@@ -42,11 +77,13 @@ function CargaOficios() {
   }
 
   const submitForm = async() => {
-    if([calle, altura, detalle, codigoPostal, fecha].some((value) => value.length !== 0)){
-      const postForm = await fetch('http://128.0.204.46:8010/registerOficio/', {method: 'POST', body: JSON.stringify(data = {fecha: fecha, calle: calle, altura: altura, detalle: detalle, codigo_postal: codigoPostal})})
-      postForm.status === 200 && resetFields() 
+    if([calle, altura, detalle, codigoPostal, fecha].every((value) => value !== "")){
+      console.log('entra')  
+      const postForm = await fetch('http://128.0.204.46:8010/registerOficio/', {method: 'POST', body: JSON.stringify({fecha: fecha, calle: calle, altura: altura, detalle: detalle, codigo_postal: codigoPostal})})
+      postForm.status === 200 ? resetFields() : incorrectDate()
+    
     } else {
-      alert('Debe completar todos los campos')
+        emptyFields()
     }
   }
 
@@ -57,7 +94,8 @@ function CargaOficios() {
   } 
 
   const resetFields = () => {
-    setFecha('')
+    correctForm()
+    setFecha(date)
     setDetalle('')
     setCalle('')
     setAltura('')
@@ -66,6 +104,7 @@ function CargaOficios() {
 
   useEffect(() => {
     getCalles()
+    console.log(date)
   }, [])
 
   if(!calles){
@@ -86,13 +125,13 @@ function CargaOficios() {
           </Form.Group>
           <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
             <Form.Label>Detalle</Form.Label>
-            <Form.Control type = "text" onChange={(event) => setDetalle(event.target.value)} value={detalle}/>
+            <Form.Control type = "text" onChange={(event) => setDetalle(event.target.value)} value={detalle} autoComplete="off"/>
           </Form.Group>
             <Flex justify="start" align="center" w="full">
             <FormControl w="1000">
               <FormLabel textAlign="center">Calle</FormLabel>
               <AutoComplete w = "full">
-                <AutoCompleteInput variant="filled" color="grey" w = "100%" style={{borderColor: "lightgray", borderRadius: "5px" }} onChange={(e) => handlerChange(e)} value={calle}/>
+                <AutoCompleteInput  autoComplete="off" variant="filled" color="grey" style={{borderColor: "lightgray", borderRadius: "5px", width: '100% !important'  }}  defaultValue={calle}/>
                 <AutoCompleteList color="black" bg = "white">
                   {calles.map((country, cid) => (
                     <AutoCompleteItem
@@ -112,11 +151,12 @@ function CargaOficios() {
           </Flex>
           <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
             <Form.Label>Altura</Form.Label>
-            <Form.Control type = "number"  onChange={(event) => setAltura(event.target.value)} value={altura}/>
+            <Form.Control type = "number"  onChange={(event) => setAltura(event.target.value)} value={altura} autoComplete="off"/>
           </Form.Group>
-          <Button as="input" type="button" value="Submit" onClick={submitForm} />{' '}
+          <Button as="input" type="button" value="Enviar Formulario"  onClick={submitForm} />{' '}
         </Form> 
-      </Container>      
+      </Container>     
+      <ToastContainer /> 
     </div>
   );
 }
