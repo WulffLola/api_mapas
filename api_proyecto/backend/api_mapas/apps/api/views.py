@@ -330,7 +330,9 @@ class OficiosViewSet(viewsets.ViewSet):
                     'CALLE' :i['calle'],
                     'ALTURA' :i['altura'],
                     'LATITUD' :i['latitud'],
-                    'LONGITUD' :i['longitud']
+                    'LONGITUD' :i['longitud'],
+                    'TIPO' :i['tipo'],
+                    'DETALLE' :i['detalle']
                 }
                 elms.append(obj)
             res = {
@@ -340,8 +342,9 @@ class OficiosViewSet(viewsets.ViewSet):
             }
         else:
             res = {
-                'code': 404,
+                'code': 203,
                 'succcess' : False,
                 'message' : 'NO SE ENCONTRARON OFICIOS SIN ASIGNAR.',
+                'data' : []
             }
         return Response(data=res, status=res.get('code'))

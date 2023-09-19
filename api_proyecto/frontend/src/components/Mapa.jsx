@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import {Container,Row,Col,Form,Button} from 'react-bootstrap';
+import {Row,Col,Form,Button, Table} from 'react-bootstrap';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker} from 'react-leaflet';
+import InspectorCard from './InspectorCard';
 
 function Mapa() {
 
@@ -84,8 +85,8 @@ function Mapa() {
     <div className="App">
       <img src="https://www.bahia.gob.ar/wp-content/uploads/2018/04/municipio-de-bahia-blanca.png"></img>
       <h3 className='m-3'>PLANIFICADOR DE FISCALIZACIÓN</h3>
-      <Container>
-        <Row>
+      <div className="contenedor p-2">
+        <Row>    {/* ACA TENEMOS EL SELECTOR DE LOS RUBROS*/}
           <Col className="col-5" >
             <Form> 
                 <Form.Group className="m-3">
@@ -114,32 +115,122 @@ function Mapa() {
             <Button variant="success" onClick={getComercios}>Geolocalizar</Button>{' '}
           </Col>
         </Row>
-        <Row> 
-          <MapContainer  center={[posicionInicial?.LATITUD, posicionInicial?.LONGITUD]} zoom={13} style={{ height: '500px', width: '100%' }}>
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            <CircleMarker id="circuloSelector" center={[-38.7182346164, -62.2642808397]} pathOptions={{ color: 'red' }} radius={100}>
-              <Popup>Area de Selección</Popup>
-            </CircleMarker>
-            {comercios?.map((e,i) =>
-              <Marker icon={blueIcon}  key={i} position={[e?.latitud, e?.longitud]}>
-              <Popup>
-                <center><strong> {e?.NOMBRE_FANTASIA.toUpperCase()} </strong> <br/> {e?.DOMICILIO.toUpperCase().split('(')[0]}</center>
-              </Popup>
-            </Marker>
-            )};
-            {oficios?.map((e,i) =>
-              <Marker icon={greenIcon} key={i} position={[e?.LATITUD, e?.LONGITUD]} style={{color:'red !important'}}>
-              <Popup>
-                <center><strong> {"OFICIO / DENUNCIA 0800"} </strong> <br/> {e?.CALLE.toUpperCase()}  {e?.ALTURA.toUpperCase()} </center>
-              </Popup>
-            </Marker>
-            )};
-          </MapContainer>
+        <Row>     {/* ACA TENEMOS EL MAPA Y LOS FILTROS*/}
+          <Col className='col-7'> 
+            <MapContainer  center={[posicionInicial?.LATITUD, posicionInicial?.LONGITUD]} zoom={13} style={{ height: '500px', width: '100%' }}>
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
+              <CircleMarker id="circuloSelector" center={[-38.7182346164, -62.2642808397]} pathOptions={{ color: 'red' }} radius={100}>
+                <Popup>Area de Selección</Popup>
+              </CircleMarker>
+              {comercios?.map((e,i) =>
+                <Marker icon={blueIcon}  key={i} position={[e?.latitud, e?.longitud]}>
+                <Popup>
+                  <center><strong> {e?.NOMBRE_FANTASIA.toUpperCase()} </strong> <br/> {e?.DOMICILIO.toUpperCase().split('(')[0]}</center>
+                </Popup>
+              </Marker>
+              )};
+              {oficios?.map((e,i) =>
+                <Marker icon={greenIcon} key={i} position={[e?.LATITUD, e?.LONGITUD]} style={{color:'red !important'}}>
+                <Popup>
+                  <center><strong> {"OFICIO / DENUNCIA 0800"} </strong> <br/> {e?.CALLE.toUpperCase()}  {e?.ALTURA.toUpperCase()} </center>
+                </Popup>
+              </Marker>
+              )};
+            </MapContainer>
+          </Col>
+          <Col className='col-5'> 
+            <p>Aca van los filtros</p>    
+            <svg className='m-1' version="1.0" xmlns="http://www.w3.org/2000/svg"
+            width="35%" height="35%" viewBox="0 0 1171.000000 1280.000000"
+            preserveAspectRatio="xMidYMid meet">
+            <metadata>
+            Created by potrace 1.15, written by Peter Selinger 2001-2017
+            </metadata>
+            <g transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"
+            fill="#000000" stroke="none">
+            <path d="M5310 12794 c-2180 -66 -3938 -423 -4754 -965 -354 -235 -535 -493
+            -553 -789 -19 -312 160 -605 519 -851 73 -50 189 -164 695 -687 335 -345 757
+            -780 938 -967 182 -187 854 -882 1495 -1544 l1165 -1203 5 -2762 5 -2761 25
+            -50 c36 -74 123 -157 195 -186 l60 -24 720 0 720 0 62 29 c73 33 147 107 184
+            181 l24 50 5 2746 5 2746 740 754 c407 415 861 878 1010 1029 275 280 934 952
+            1850 1885 280 286 555 567 610 623 55 57 143 133 195 170 122 86 271 235 339
+            340 l54 82 43 0 44 0 0 360 0 360 -50 0 c-27 0 -50 4 -50 9 0 15 -89 142 -134
+            191 -362 396 -1106 713 -2181 929 -452 91 -1010 172 -1525 221 -619 58 -1082
+            80 -1780 84 -311 2 -617 2 -680 0z"/>
+            </g>
+            </svg>
+        
+          </Col>
         </Row>
-      </Container>      
+        <Row>          {/* ACA TENEMOS EL SELECTOR DE LOS COMERCIOS DENTRO DEL AREA*/}
+          <Col className='text-center mt-5'>
+                <span>SELECCIONE LOS COMERCIOS A INSPECCIONAR</span>
+                <Table className='mt-5'>
+                  <thead>
+                    <tr>
+                      <th width="20"></th>
+                      <th width="260">COMERCIO</th>
+                      <th width="260">RUBRO</th>
+                      <th width="260">DIRECCION</th>
+                    </tr>
+                  </thead>
+                  <tbody id='seleccionador-comercios'>         
+                    {comercios?.map((e,i) =>
+                      <tr key={i}>
+                        <td>
+                          <Form.Check // prettier-ignore
+                            type="switch"
+                            id={e.COMERCIO_ID}
+                          />
+                        </td>
+                        <td>
+                          {e?.NOMBRE_FANTASIA.toUpperCase()}
+                        </td>
+                        <td>
+                          {e?.ACTIVIDAD_DESCRIPCION.toUpperCase().split('',30)}
+                        </td>
+                        <td>
+                          {e?.DOMICILIO.toUpperCase().split(')')[0]+')'}
+                        </td>
+                      </tr>
+                    )}
+                    {oficios?.map((e,i) =>
+                      <tr key={i}> 
+                        <td>
+                          <Form.Check // prettier-ignore
+                            type="switch"
+                            id={e.ID}
+                          />
+                        </td>
+                        <td>
+                          {e?.TIPO.toUpperCase()}
+                        </td>
+                        <td>
+                          {e?.DETALLE.toUpperCase().split('',30)}
+                        </td>
+                        <td>
+                          {e?.CALLE.toUpperCase()+' '+e?.ALTURA}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
+          </Col>
+        </Row>
+        <Row>    {/* ACA TENEMOS EL SELECTOR DE LOS INSPECTORES Y EL GENERADOR DE LA HOJA DE RUTA*/}
+          <Col className='col-6'> {/* SELECCIONAMOS LOS INSPECTORES */}
+            <Form.Select>
+              <option key='disabledRow' hidden value>Seleccione los Inspectores de la cuadrilla</option>
+              <option value="1">Inspector Martínez P.</option>
+            </Form.Select>
+          </Col>
+          <Col className='col-6'>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 }
