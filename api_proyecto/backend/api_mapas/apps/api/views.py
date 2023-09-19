@@ -60,6 +60,27 @@ class syncAPIViewSet(viewsets.ViewSet):
                 print("Error insertado."  " Contador: " +str(i))    
             except (Exception, psycopg2.Error) as error:
                 print("Error al insertar el error:", error)
+                
+    def obtenerDistanciaEntrePuntos (self, request):
+        body = json.loads(request.body_unicode)
+        data = body['data']
+        data = []
+        if(data['x1'] is not None) and (data['x2' is not None]) and (data['y1'] is not None) and (data['y2']):
+            distancia = math.sqrt((data['x2']-data['x1'])**2+(data['y2']-data['y1'])**2)
+            res = {
+                'code': 200,
+                'succcess' : True,
+                'data' : distancia,
+            } 
+        else:
+            res = {
+                'code': 401,
+                'succcess' : False,
+                'data' : [],
+                'msg' : 'ERROR EN LOS PARÁMETROS INGRESADOS.'
+            }            
+            
+        return Response(data=res, status=res.get('code'))
     
     def ordenarDirecciones (self,request):
         print(request)
@@ -318,6 +339,7 @@ class OficiosViewSet(viewsets.ViewSet):
                 'error' : "Direccion no se puede geolocalizar."
             }
         return Response(data=res, status=res.get('code'))
+
     
     def list(self, request):    
         elms = []

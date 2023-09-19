@@ -42,15 +42,19 @@ class Error(models.Model):
     
 class HojaDeRuta(models.Model):
     id = models.AutoField(primary_key=True)
-    fecha = models.TextField(null=False)
-    codigo_postal = models.CharField(max_length = 100, null=True)
-    calle = models.CharField(max_length = 100, null=True)
-    altura = models.CharField(max_length = 100, null=True)
-    partida = models.CharField(max_length = 100, null=True)
-    nomenclatura = models.CharField(max_length = 100, null=True)
+    fecha = models.DateField(null=False)
+    listadoAInspeccionar = models.TextField(null=False,default='[]')
+    listadoInspectores = models.TextField(null=False,default='[]')
+    observaciones = models.TextField(null=True)
+    idusuarioGenerador = models.IntegerField(null=False,default=1)
     def __str__(self):
         data = {
             'ID' : self.id,
+            'FECHA': self.fecha,
+            'LISTADO_A_INSPECCIONAR' : self.listadoAInspeccionar,
+            'LISTADO_INSPECTORES' : self.listadoInspectores,
+            'OBSERVACIONES' : self.observaciones,
+            'USUARIO_GENERADOR' : self.idusuarioGenerador
         }
         return str(data)
     
