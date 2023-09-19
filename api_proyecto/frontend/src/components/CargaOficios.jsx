@@ -104,7 +104,6 @@ function CargaOficios() {
 
   useEffect(() => {
     getCalles()
-    console.log(date)
   }, [])
 
   if(!calles){

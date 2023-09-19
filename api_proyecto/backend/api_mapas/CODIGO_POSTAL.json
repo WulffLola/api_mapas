@@ -4,7 +4,59 @@
         "CIUDAD" : "BAHIA BLANCA"
     },
     {
-        "CODIGO_POSTAL": "XXXX",
-        "CIUDAD" : "PEPE PEPE"
+        "CODIGO_POSTAL": "8001",
+        "CIUDAD" : "BAHIA BLANCA"
+    },
+    {
+        "CODIGO_POSTAL": "8002",
+        "CIUDAD" : "BAHIA BLANCA"
+    },
+    {
+        "CODIGO_POSTAL": "8003",
+        "CIUDAD" : "BAHIA BLANCA"
+    },
+    {
+        "CODIGO_POSTAL": "8004",
+        "CIUDAD" : "BAHIA BLANCA"
+    },
+    {
+        "CODIGO_POSTAL": "8005",
+        "CIUDAD" : "BAHIA BLANCA"
+    },
+    {
+        "CODIGO_POSTAL": "8006",
+        "CIUDAD" : "BAHIA BLANCA"
+    },
+    {
+        "CODIGO_POSTAL": "8007",
+        "CIUDAD" : "BAHIA BLANCA"
+    },
+    {
+        "CODIGO_POSTAL": "8101",
+        "CIUDAD" : "GRUMBEIN"
+    },
+    {
+        "CODIGO_POSTAL": "8103",
+        "CIUDAD" : "INGENIERO WHITE"
+    },
+    {
+        "CODIGO_POSTAL": "8105",
+        "CIUDAD" : "CERRI"
+    },
+    {
+        "CODIGO_POSTAL": "8107",
+        "CIUDAD" : "ESPORA"
+    },
+    {
+        "CODIGO_POSTAL": "8109",
+        "CIUDAD" : "PUNTA ALTA"
+    },
+    {
+        "CODIGO_POSTAL": "8118",
+        "CIUDAD" : "CABILDO"
+    },
+    {
+        "CODIGO_POSTAL": "8132",
+        "CIUDAD" : "MEDANOS"
     }
 ]
