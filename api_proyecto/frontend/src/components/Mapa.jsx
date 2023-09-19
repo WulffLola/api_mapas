@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {Container,Row,Col,Form,Button} from 'react-bootstrap';
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker} from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
+import AreaSelect from './AreaSelect';
+import "leaflet/dist/leaflet.css";
+import "leaflet-area-select";
 
 function Mapa() {
 
@@ -46,7 +49,6 @@ function Mapa() {
     const resAPI2 = await resAPI.json()
     python ? setEstado(resAPI2.data) : setEstado(resAPI2)
   }
-
   const [comercios, setComercios] = useState()
   const [categorias, setCategorias] = useState()
   const [subCategorias, setSubcategorias] = useState()
@@ -114,16 +116,13 @@ function Mapa() {
             <Button variant="success" onClick={getComercios}>Geolocalizar</Button>{' '}
           </Col>
         </Row>
-        <Row> 
           <MapContainer  center={[posicionInicial?.LATITUD, posicionInicial?.LONGITUD]} zoom={13} style={{ height: '500px', width: '100%' }}>
+            
             <TileLayer
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            <CircleMarker id="circuloSelector" center={[-38.7182346164, -62.2642808397]} pathOptions={{ color: 'red' }} radius={100}>
-              <Popup>Area de Selección</Popup>
-            </CircleMarker>
-            {comercios?.map((e,i) =>
+            /><AreaSelect />
+           {comercios?.map((e,i) =>
               <Marker icon={blueIcon}  key={i} position={[e?.latitud, e?.longitud]}>
               <Popup>
                 <center><strong> {e?.NOMBRE_FANTASIA.toUpperCase()} </strong> <br/> {e?.DOMICILIO.toUpperCase().split('(')[0]}</center>
@@ -136,9 +135,8 @@ function Mapa() {
                 <center><strong> {"OFICIO / DENUNCIA 0800"} </strong> <br/> {e?.CALLE.toUpperCase()}  {e?.ALTURA.toUpperCase()} </center>
               </Popup>
             </Marker>
-            )};
+            )}; 
           </MapContainer>
-        </Row>
       </Container>      
     </div>
   );
