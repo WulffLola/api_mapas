@@ -14,8 +14,9 @@ router.register(r'getIncompletesAddress',views.getIncompletesAddress, basename='
 router.register(r'oficios', views.OficiosViewSet, basename='getOficios')
 router.register(r'listUniqueAddressNames', views.filterbyParams, basename='listUniqueAddressNames')
 router.register(r'^registerOficio$', views.OficiosViewSet, basename='registerOficio')
-router.register(r'^ordenarDirecciones$', views.syncAPIViewSet, basename='ordenarDirecciones')
+router.register(r'^nuevaHojaDeRuta$', views.syncAPIViewSet, basename='nuevaHojaDeRuta')
 router.register(r'^obtenerDistanciaEntrePuntos$', views.syncAPIViewSet, basename='obtenerDistanciaEntrePuntos')
+router.register(r'obtenerHojaDeRuta',views.syncAPIViewSet, basename='obtenerHojaDeRuta')
 
 
 
@@ -35,8 +36,10 @@ urlpatterns = [
         filterbyParams.as_view({'get': 'listUniqueAddressNames'}), name='listUniqueAddressNames'),
     path('registerOficio/',
         OficiosViewSet.as_view({'post': 'registerOficio'}), name='registerOficio'),
-    path('ordenarDirecciones/',
-        syncAPIViewSet.as_view({'post': 'ordenarDirecciones'}), name='ordenarDirecciones'),
+    path('nuevaHojaDeRuta/',
+        syncAPIViewSet.as_view({'post': 'nuevaHojaDeRuta'}), name='nuevaHojaDeRuta'),
     path('obtenerDistanciaEntrePuntos/',
         syncAPIViewSet.as_view({'post': 'obtenerDistanciaEntrePuntos'}), name='obtenerDistanciaEntrePuntos'),
+    path('obtenerHojaDeRuta/<int:id_hoja_de_ruta>',
+        syncAPIViewSet.as_view({'get': 'obtenerHojaDeRuta'}), name='obtenerHojaDeRuta'),
 ]

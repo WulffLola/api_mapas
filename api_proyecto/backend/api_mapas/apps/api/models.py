@@ -1,4 +1,6 @@
 from django.db import models
+from datetime import datetime    
+from django import utils as django
 
 class Address(models.Model):
     id = models.AutoField(primary_key=True)
@@ -42,9 +44,9 @@ class Error(models.Model):
     
 class HojaDeRuta(models.Model):
     id = models.AutoField(primary_key=True)
-    fecha = models.DateField(null=False)
-    listadoAInspeccionar = models.TextField(null=False,default='[]')
-    listadoInspectores = models.TextField(null=False,default='[]')
+    fecha = models.DateField(null=True,default=django.timezone.now)
+    listadoAInspeccionar = models.TextField(null=False,default='-1')
+    listadoInspectores = models.TextField(null=False,default='-1')
     observaciones = models.TextField(null=True)
     idusuarioGenerador = models.IntegerField(null=False,default=1)
     def __str__(self):

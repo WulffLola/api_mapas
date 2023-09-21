@@ -1,7 +1,7 @@
 from rest_framework import viewsets
-from .serializer import AddressSerializer, OficiosSerializer
+from .serializer import AddressSerializer, OficiosSerializer, HojaDeRutaSerializer
 from django.core.serializers import serialize
-from .models import Address,Error, Oficios
+from .models import Address,Error, Oficios, HojaDeRuta
 import requests
 import json 
 import psycopg2 
@@ -15,6 +15,8 @@ class AdressesViewSet(viewsets.ModelViewSet):
     serializer_class = AddressSerializer
     
 class syncAPIViewSet(viewsets.ViewSet):
+    queryset = HojaDeRuta.objects.all()
+    serializer_class = HojaDeRutaSerializer
     def normalizarDireccion (row):
         with open('CALLES_CONFLICTIVAS.json') as file:
             datos = json.load(file)
@@ -65,7 +67,7 @@ class syncAPIViewSet(viewsets.ViewSet):
         body = json.loads(request.body_unicode)
         data = body['data']
         data = []
-        if(data['x1'] is not None) and (data['x2' is not None]) and (data['y1'] is not None) and (data['y2']):
+        if(data['x1'] !=  None) and (data['x2' !=  None]) and (data['y1'] !=  None) and (data['y2'] != None):
             distancia = math.sqrt((data['x2']-data['x1'])**2+(data['y2']-data['y1'])**2)
             res = {
                 'code': 200,
@@ -82,40 +84,94 @@ class syncAPIViewSet(viewsets.ViewSet):
             
         return Response(data=res, status=res.get('code'))
     
-    def ordenarDirecciones (self,request):
-        print(request)
-        """
+    def nuevaHojaDeRuta (self,request):
+        body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
-        direcciones = body['data']
-        latitud_origen = "-38.7162124291"
-        longitud_orgen = "-62.2745471692"
+        direcciones = body['comercios']
+        observaciones = body['observaciones']
+        latitud_origen = float(body['posicion_inicial']['LATITUD'])
+        longitud_orgen = float(body['posicion_inicial']['LONGITUD'])
         data = []
-        print (direcciones)
         for x in direcciones :
-            id = x['id']
-            latitud = x['latitud']
-            longitud = x['longitud']
+            latitud = float(x['latitud'])
+            longitud = float(x['longitud'])
             distancia = math.sqrt((longitud-longitud_orgen)**2+(latitud-latitud_origen)**2)
+            if('DOMICILIO' in x):
+                x['CALLE'] = x['DOMICILIO'].split('Nro:')[0].strip()
+                x['ALTURA'] = x['DOMICILIO'].split('Nro:')[1]
+                x['ALTURA'] = x['ALTURA'].split('\n')[0].strip()
+                x['TIPO'] = x['ACTIVIDAD_DESCRIPCION']
+                x['CODIGO_POSTAL']=  x['DOMICILIO'].split('(')[1]
+                x['CODIGO_POSTAL']=  x['CODIGO_POSTAL'].split(')')[0].strip()
+                x['DETALLE'] = x['NOMBRE_FANTASIA']
+            """
+            Aca validamos si lo que recibimos es un Comercio o un Oficio / 0800 para normalizar el JSON de salida al Front.
+            """ 
             item = {
-                'ID' : id,
-                'DISTANCIA_AL_ORIGEN' : distancia
+                'COMERCIO_ID' : x['COMERCIO_ID'],
+                'ALTURA' : x['ALTURA'],
+                'CALLE': x['CALLE'],
+                'CODIGO_POSTAL': x['CODIGO_POSTAL'],
+                'DETALLE': x['DETALLE'],
+                'TIPO': x['TIPO'],
+                'latitud': x['latitud'],
+                'longitud': x['longitud'],
+                'DISTANCIA_AL_ORIGEN' : distancia,
             }
             data.append(item)
             
         #Una vez calculadas las distancias entre puntos, las ordenamos de menor a mayor. 
             
-        sorted(data, key=lambda x: x['DISTANCIA_AL_ORIGEN'])  
+        data = sorted(data, key=lambda x: x['DISTANCIA_AL_ORIGEN'])  
+        try:
+            row = HojaDeRuta(listadoAInspeccionar = str(data),listadoInspectores = "[MARTINEZ, P.]",observaciones = observaciones,idusuarioGenerador=1)
+            row.save()
+            res = {
+                'code': 200,
+                'succcess' : True,
+                'id_hoja_de_ruta' : HojaDeRuta.objects.latest('id').id
+            }  
+        except (Exception, psycopg2.Error) as error:
+            print("Error al insertar el error:", error)
+            res = {
+                'code': 400,
+                'succcess' : False,
+                'msg' : 'Error al crear la Hoja de Ruta.'
+            }    
         
-        res = {
-            'code': 200,
-            'succcess' : True,
-            'data' : data
-        }            
-            
         return Response(data=res, status=res.get('code'))
-        """
-        return Response(data=[], status=200)
-
+    
+    def obtenerHojaDeRuta(self,request,id_hoja_de_ruta = 'null'):
+        if(id_hoja_de_ruta != 'null'):
+            buscar = HojaDeRuta.objects.filter(id = id_hoja_de_ruta).first()
+            if(buscar):
+                response = {
+                    'code': 200,
+                    'succcess' : True,
+                    'data' : {
+                            'FECHA' : buscar.fecha,
+                            'COMERCIOS' : buscar.listadoAInspeccionar,
+                            'INSPECTORES' : buscar.listadoInspectores,
+                            'OBSERVACIONES' : buscar.observaciones,
+                            'USUARIO_GENERADOR' : buscar.idusuarioGenerador,
+                    }
+                }    
+            else:
+                response = {
+                    'code': 404,
+                    'succcess' : False,
+                    'data' : {},
+                    'msg' : 'HOJA DE RUTA NO ENCONTRADA'
+                } 
+        else:
+            response = {
+                'code': 501,
+                'succcess' : False,
+                'data' : {},
+                'msg' : 'INGRESE PARAMETRO ID HOJA DE RUTA'
+            }                   
+        return Response(data=response, status=response.get('code'))
+        
         
     def sync_addresses(self, request):
         repetidos = 0
@@ -347,12 +403,12 @@ class OficiosViewSet(viewsets.ViewSet):
         if(buscar.count()>0): #Tenemos registros que mostrar, los tenemos que recorrer.
             for i in buscar:
                 obj = {
-                    'ID' :i['id'],
+                    'COMERCIO_ID' :i['id'],
                     'CODIGO_POSTAL' : '8000',
                     'CALLE' :i['calle'],
                     'ALTURA' :i['altura'],
-                    'LATITUD' :i['latitud'],
-                    'LONGITUD' :i['longitud'],
+                    'latitud' :i['latitud'],
+                    'longitud' :i['longitud'],
                     'TIPO' :i['tipo'],
                     'DETALLE' :i['detalle']
                 }
