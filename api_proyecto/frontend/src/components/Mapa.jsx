@@ -209,7 +209,7 @@ function Mapa() {
           </Col>
         </Row>
         <Row>     {/* ACA TENEMOS EL MAPA Y LOS FILTROS*/}
-          <Col className='col-7'> 
+          <Col className='col-12'> 
           <MapContainer  center={[posicionInicial?.LATITUD, posicionInicial?.LONGITUD]} zoom={13} style={{ height: '500px', width: '100%' }}>
             <TileLayer
               attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -231,7 +231,7 @@ function Mapa() {
             )}; 
           </MapContainer>
           </Col>
-          <Col className='col-5'> 
+          <Col hidden className='col-3'> 
             <p>Aca van los filtros</p>    
             <svg className='m-1' version="1.0" xmlns="http://www.w3.org/2000/svg"
             width="35%" height="35%" viewBox="0 0 1171.000000 1280.000000"
@@ -256,8 +256,8 @@ function Mapa() {
           </Col>
         </Row>
         <Row>          {/* ACA TENEMOS EL SELECTOR DE LOS COMERCIOS DENTRO DEL AREA*/}
-          <Col className='text-center mt-5'>
-                <span>SELECCIONE LOS COMERCIOS A INSPECCIONAR</span>
+          <Col className='text-center mt-1'>
+                <span hidden>SELECCIONE LOS COMERCIOS A INSPECCIONAR</span>
                 <Table className='mt-5'>
                   <thead>
                     <tr>
