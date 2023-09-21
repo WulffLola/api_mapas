@@ -1,14 +1,16 @@
-import React from 'react';
 import Mapa from './components/Mapa';
 import CargaOficios from './components/CargaOficios';
+import { AppProvider } from './context/MyContext';
 
 
 function App() {
  return (
-  <main>
-    <Mapa/>
-    <CargaOficios/>
-  </main>
+  <AppProvider>
+    <main>
+      <Mapa/>
+      <CargaOficios/>
+    </main>
+  </AppProvider>
  )
 }
 

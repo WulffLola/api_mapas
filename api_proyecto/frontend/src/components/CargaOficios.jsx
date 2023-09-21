@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import {Container,Row,Col,Form,Button} from 'react-bootstrap';
+import  { useEffect, useState } from 'react';
+import {Container,Row,Form,Button,Col} from 'react-bootstrap';
 import {
   Flex,
   FormControl, 
@@ -14,6 +14,7 @@ import {
   } from "@choc-ui/chakra-autocomplete";
   import { ToastContainer, toast } from 'react-toastify';
   import 'react-toastify/dist/ReactToastify.css';
+  import "../App.css"
 
 function CargaOficios() {
 
@@ -65,11 +66,7 @@ function CargaOficios() {
   const [codigoPostal, setCodigoPostal] = useState('')
   const [altura, setAltura] = useState("")
   const [fecha, setFecha] = useState(date)
-  const [formData, setFormData] = useState({
-    detalle: "",
-    calle: "",
-    altura: ""
-  })
+
   const [calles, setCalles] = useState()
 
   const getCalles = async () => {
@@ -78,7 +75,6 @@ function CargaOficios() {
 
   const submitForm = async() => {
     if([calle, altura, detalle, codigoPostal, fecha].every((value) => value !== "")){
-      console.log('entra')  
       const postForm = await fetch('http://128.0.204.46:8010/registerOficio/', {method: 'POST', body: JSON.stringify({fecha: fecha, calle: calle, altura: altura, detalle: detalle, codigo_postal: codigoPostal})})
       postForm.status === 200 ? resetFields() : incorrectDate()
     
@@ -112,48 +108,68 @@ function CargaOficios() {
   return (
     <div className="App">
       <img src="https://www.bahia.gob.ar/wp-content/uploads/2018/04/municipio-de-bahia-blanca.png"></img>
-      <h3 className='m-3'>PLANIFICADOR DE FISCALIZACIÓN</h3>
       <Container>
         <Row>
           <h3 className='m-3'>FORMULARIO DE OFICIOS</h3>
         </Row>
-        <Form>
-          <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
-            <Form.Label>Fecha</Form.Label>
-            <Form.Control type = "date" onChange={(event) => setFecha(event.target.value)} value={fecha}/>
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
-            <Form.Label>Detalle</Form.Label>
-            <Form.Control type = "text" onChange={(event) => setDetalle(event.target.value)} value={detalle} autoComplete="off"/>
-          </Form.Group>
+        <Form className='formulario'>
+        <Row>
+          <Col className='col-6'>
+            <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+                  <Form.Label>Fecha</Form.Label>
+                  <Form.Control type = "date" onChange={(event) => setFecha(event.target.value)} value={fecha}/>
+                </Form.Group>
+          </Col>
+          <Col className='col-6'>
+            <Form.Label>Ciudad</Form.Label>
+              <Form.Select>
+                  <option value="1">Bahia Blanca</option>
+                  <option value="1">Cerri</option>
+                  <option value="1">Medanos</option>
+                  <option value="1">Ingeniero White</option>
+                </Form.Select>
+          </Col>
+        </Row>
+        <Row>
+          <Col className='col-6'>
             <Flex justify="start" align="center" w="full">
-            <FormControl w="1000">
-              <FormLabel textAlign="center">Calle</FormLabel>
-              <AutoComplete w = "full">
-                <AutoCompleteInput  autoComplete="off" variant="filled" color="grey" style={{borderColor: "lightgray", borderRadius: "5px", width: '100% !important'  }}  defaultValue={calle}/>
-                <AutoCompleteList color="black" bg = "white">
-                  {calles.map((country, cid) => (
-                    <AutoCompleteItem
-                    key={`option-${cid}`}    
-                      value={country.calle}
-                      textTransform="capitalize"
-                      onClick={() => handlerChange(country.calle, country.codigo_postal)}
-                      bg="white"
-                    >
-                      {country.calle} {' - ' + country.codigo_postal}
-                    </AutoCompleteItem>
-                  ))}
-                </AutoCompleteList>
-              </AutoComplete>
-              <FormHelperText></FormHelperText>
-            </FormControl>
-          </Flex>
-          <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
-            <Form.Label>Altura</Form.Label>
-            <Form.Control type = "number"  onChange={(event) => setAltura(event.target.value)} value={altura} autoComplete="off"/>
+              <FormControl w="1000">
+                <FormLabel textAlign="center">Calle</FormLabel>
+                <AutoComplete w = "full">
+                  <AutoCompleteInput  autoComplete="off" variant="filled" color="grey" style={{borderColor: "lightgray", borderRadius: "5px", width: '100% !important'  }}  defaultValue={calle}/>
+                  <AutoCompleteList color="black" bg = "white">
+                    {calles.map((country, cid) => (
+                      <AutoCompleteItem
+                      key={`option-${cid}`}    
+                        value={country.calle}
+                        textTransform="capitalize"
+                        onClick={() => handlerChange(country.calle, country.codigo_postal)}
+                        bg="white"
+                      >
+                        {country.calle} {' - ' + country.codigo_postal}
+                      </AutoCompleteItem>
+                    ))}
+                  </AutoCompleteList>
+                </AutoComplete>
+                <FormHelperText></FormHelperText>
+              </FormControl>
+            </Flex>
+          </Col>
+          <Col className='col-6'>
+            <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
+              <Form.Label>Altura</Form.Label>
+              <Form.Control type = "number"  onChange={(event) => setAltura(event.target.value)} value={altura} autoComplete="off"/>
+            </Form.Group>
+          </Col>
+        </Row>
+        <Row>
+          <Form.Group className="mb-3">
+            <Form.Label>Detalle</Form.Label>
+            <Form.Control as="textarea" rows={2} onChange={(event) => setDetalle(event.target.value)} value={detalle} autoComplete="off"/>
           </Form.Group>
-          <Button as="input" type="button" value="Enviar Formulario"  onClick={submitForm} />{' '}
-        </Form> 
+        </Row>
+        <Button as="input" type="button" value="Enviar Formulario"  onClick={submitForm} />{' '}
+      </Form> 
       </Container>     
       <ToastContainer /> 
     </div>

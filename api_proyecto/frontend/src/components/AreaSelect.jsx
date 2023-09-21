@@ -1,18 +1,22 @@
-import { useEffect } from "react";
+import { useContext, useEffect} from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
+import { AppContext } from "../context/MyContext";
 
 function AreaSelect() {
     const map = useMap();
-    console.log(map);
+    const { setCoordinates } = useContext(AppContext)
+
   
     useEffect(() => {
       if (!map.selectArea) return;
   
       map.selectArea.enable();
-  
+
       map.on("areaselected", (e) => {
-        console.log(e.bounds.toBBoxString()); // lon, lat, lon, lat
+        const unido = e.bounds.toBBoxString()
+        const separado = unido.split(',')
+        setCoordinates(separado)
         L.rectangle(e.bounds, { color: "blue", weight: 1 }).addTo(map);
       });
   

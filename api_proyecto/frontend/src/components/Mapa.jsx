@@ -1,11 +1,59 @@
-import React, { useEffect, useState } from 'react';
-import {Container,Row,Col,Form,Button, Table} from 'react-bootstrap';
+import { useContext, useEffect, useState } from 'react';
+import {Row,Col,Form,Button, Table} from 'react-bootstrap';
 import { MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
 import AreaSelect from './AreaSelect';
 import "leaflet/dist/leaflet.css";
 import "leaflet-area-select";
+import { AppContext } from '../context/MyContext';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Mapa() {
+    const {coordinates} = useContext(AppContext)
+
+    const [comercios, setComercios] = useState()
+    const [categorias, setCategorias] = useState()
+    const [subCategorias, setSubcategorias] = useState()
+    const [posicionInicial, setPosicionInicial] = useState()
+    const [oficios, setOficios] = useState()
+    const [latitudes, setLatitudes] = useState([])
+    const [longitudes, setLongitudes] = useState([])
+    const [itemSeleccionados, setItemSeleccionado] = useState([])
+    const [observaciones, setObservaciones] = useState("")
+
+    const emptyFields = () => toast.error('Debe haber mínimo algun comercio seleccionado.', {
+      position: "bottom-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
+    const correctMessage = () => toast.success('Hoja de ruta generada correctamente.', {
+      position: "bottom-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      });
+  
+    const errorMessage = () => toast.warn('Error, intente nuevamente mas tarde!', {
+      position: "bottom-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      });
+  
 
     var greenIcon = new L.Icon({
       iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
@@ -42,6 +90,44 @@ function Mapa() {
     }    
   })
 
+  const resetFields = () => {
+    window.location.reload()
+    // correctMessage()
+    // setObservaciones('')
+    // setComercios([])
+    // getInformacionInicial()
+
+  }
+
+  useEffect(() => {
+    const filteredComercios = comercios?.filter((item) => (latitudes[0] <= item?.latitud && latitudes[1] >= item.latitud && longitudes[0] <= item?.longitud && longitudes[1] >= item.longitud ))
+    setComercios(filteredComercios)
+    const filteredOficios = oficios?.filter((item) => (latitudes[0] <= item?.latitud && latitudes[1] >= item.latitud && longitudes[0] <= item?.longitud && longitudes[1] >= item.longitud ))
+    setOficios(filteredOficios)
+  }, [latitudes, longitudes])
+
+  const getComerciosInArea = (coordenadas) => {
+    let x1 = coordenadas[0]
+    let y1 = coordenadas[1]
+    let x2 = coordenadas[2]
+    let y2 = coordenadas[3]
+    let longitud = [x1,x2]
+    let latitud = [y1,y2]
+    latitud.sort()
+    longitud.sort()
+    setLatitudes(() =>latitud)
+    setLongitudes(() =>longitud)
+  }
+
+  const handleChange = e => {
+    if(e.target.checked){
+      setItemSeleccionado((prev) => [...prev, JSON.parse(e.target.value)])
+    } else {
+      const filtrados = itemSeleccionados.filter((item) => item.COMERCIO_ID !== e.target.id)
+      setItemSeleccionado(filtrados)
+    }
+  };
+
   const getAPI = async (url,setEstado,python = true) => {
     //El parametro opcional PYTHON recibe un booleano que indica si la API a la que consultamos es 
     //la nuestra en Python o es una externa (Marcelo / PHP). Por eso, la forma de setear el estado es diferente.
@@ -49,15 +135,21 @@ function Mapa() {
     const resAPI2 = await resAPI.json()
     python ? setEstado(resAPI2.data) : setEstado(resAPI2)
   }
-  const [comercios, setComercios] = useState()
-  const [categorias, setCategorias] = useState()
-  const [subCategorias, setSubcategorias] = useState()
-  const [posicionInicial, setPosicionInicial] = useState()
-  const [oficios, setOficios] = useState()
-
-
+  
+  const sendDatos = async() => {
+    if(itemSeleccionados.length > 0){
+      const postForm = await fetch('http://128.0.204.46:8010/nuevaHojaDeRuta/', {method: 'POST', body: JSON.stringify({posicion_inicial: posicionInicial, comercios: itemSeleccionados, observaciones: observaciones})})
+      postForm.status === 200 ? resetFields(): errorMessage()
+    
+    } else {
+        emptyFields()
+    }
+  }
   const getSubcategorias = async (e) => {
+    setComercios([])
     await getAPI ('https://bahia.gob.ar/comercios/datos/comerciosact.php?ac='+e.target.value,setSubcategorias,false)
+    getComercios()
+    
   }
 
   const getOficios = async (e) => {
@@ -104,7 +196,7 @@ function Mapa() {
             <Form>
                 <Form.Group className="m-3">
                     <Form.Label>Sub-Actividad: </Form.Label>
-                    <Form.Select id="selectComercios">
+                    <Form.Select id="selectComercios" onChange={() => getComercios()}>
                     {subCategorias?.map(option =>
                       <option key={option.ACTIVIDAD_CODIGO} value={option.ACTIVIDAD_CODIGO}>{option.ACTIVIDAD_DESCRIPCION.toUpperCase()}</option>
                     )};
@@ -113,7 +205,7 @@ function Mapa() {
             </Form>
           </Col>
           <Col className="col-2 mt-5">
-            <Button variant="success" onClick={getComercios}>Geolocalizar</Button>{' '}
+            <Button variant="success" onClick={()=> getComerciosInArea(coordinates)}>Filtrar</Button>{' '}
           </Col>
         </Row>
         <Row>     {/* ACA TENEMOS EL MAPA Y LOS FILTROS*/}
@@ -131,7 +223,7 @@ function Mapa() {
             </Marker>
             )};
             {oficios?.map((e,i) =>
-              <Marker icon={greenIcon} key={i} position={[e?.LATITUD, e?.LONGITUD]} style={{color:'red !important'}}>
+              <Marker icon={greenIcon} key={i} position={[e?.latitud, e?.longitud]} style={{color:'red !important'}}>
               <Popup>
                 <center><strong> {"OFICIO / DENUNCIA 0800"} </strong> <br/> {e?.CALLE.toUpperCase()}  {e?.ALTURA.toUpperCase()} </center>
               </Popup>
@@ -182,6 +274,8 @@ function Mapa() {
                           <Form.Check // prettier-ignore
                             type="switch"
                             id={e.COMERCIO_ID}
+                            onChange={(e) =>handleChange(e)}
+                            value={JSON.stringify(e)}
                           />
                         </td>
                         <td>
@@ -200,7 +294,9 @@ function Mapa() {
                         <td>
                           <Form.Check // prettier-ignore
                             type="switch"
-                            id={e.ID}
+                            id={e.COMERCIO_ID}
+                            onChange={(e) =>handleChange(e)}
+                            value={JSON.stringify(e)}
                           />
                         </td>
                         <td>
@@ -219,15 +315,28 @@ function Mapa() {
           </Col>
         </Row>
         <Row>    {/* ACA TENEMOS EL SELECTOR DE LOS INSPECTORES Y EL GENERADOR DE LA HOJA DE RUTA*/}
-          <Col className='col-6'> {/* SELECCIONAMOS LOS INSPECTORES */}
-            <Form.Select>
-              <option key='disabledRow' hidden value>Seleccione los Inspectores de la cuadrilla</option>
-              <option value="1">Inspector Martínez P.</option>
-            </Form.Select>
+          <Col className='col-3'> {/* SELECCIONAMOS LOS INSPECTORES */}
+          <Form.Group className="mb-3">
+            <Form.Label>Seleccione un Inspector</Form.Label>
+              <Form.Select>
+                <option value="1">Inspector Martínez P.</option>
+              </Form.Select>
+            </Form.Group>
           </Col>
-          <Col className='col-6'>
+          <Col className='col-9'>
+          <Form.Group className="mb-3">
+              <Form.Label>Observaciones</Form.Label>
+              <Form.Control type = "text"  onChange={(event) => setObservaciones(event.target.value)} value={observaciones} autoComplete="off"/>
+            </Form.Group>
           </Col>
         </Row>
+        <Row>
+          <Col className='col-12'>
+          <Button variant="success" onClick={()=> sendDatos()}>Generar Hoja de Ruta</Button>{' '}
+          </Col>
+        </Row>
+
+      <ToastContainer /> 
       </div>
     </div>
   );
