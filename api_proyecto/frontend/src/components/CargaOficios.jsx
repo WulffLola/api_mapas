@@ -66,6 +66,7 @@ function CargaOficios() {
   const [codigoPostal, setCodigoPostal] = useState('')
   const [altura, setAltura] = useState("")
   const [fecha, setFecha] = useState(date)
+  const [codigoPostalFiltradoCalles, setCodigoPostalFiltradoCalles] = useState('8000')
 
   const [calles, setCalles] = useState()
 
@@ -98,6 +99,11 @@ function CargaOficios() {
   
   }
 
+  const getCalles2 = async (e) => {
+    e? setCodigoPostalFiltradoCalles(e.target.value) : null
+    await getAPI ('http://128.0.202.248:8499/calles/filtro_por_codigo_postal/'+codigoPostalFiltradoCalles,setCalles)
+  }
+
   useEffect(() => {
     getCalles()
   }, [])
@@ -123,10 +129,10 @@ function CargaOficios() {
           <Col className='col-6'>
             <Form.Label>Ciudad</Form.Label>
               <Form.Select>
-                  <option value="1">Bahia Blanca</option>
-                  <option value="1">Cerri</option>
-                  <option value="1">Medanos</option>
-                  <option value="1">Ingeniero White</option>
+                  <option value="8000">Bahia Blanca</option>
+                  <option value="8105">Cerri</option>
+                  <option value="8132">Medanos</option>
+                  <option value="8103">Ingeniero White</option>
                 </Form.Select>
           </Col>
         </Row>
@@ -134,19 +140,19 @@ function CargaOficios() {
           <Col className='col-6'>
             <Flex justify="start" align="center" w="full">
               <FormControl w="1000">
-                <FormLabel textAlign="center">Calle</FormLabel>
-                <AutoComplete w = "full">
+                <Form.Label textAlign="center">Calle</Form.Label>
+                <AutoComplete>
                   <AutoCompleteInput  autoComplete="off" variant="filled" color="grey" style={{borderColor: "lightgray", borderRadius: "5px", width: '100% !important'  }}  defaultValue={calle}/>
                   <AutoCompleteList color="black" bg = "white">
-                    {calles.map((country, cid) => (
+                    {calles.map((calle, cid) => (
                       <AutoCompleteItem
                       key={`option-${cid}`}    
-                        value={country.calle}
+                        value={calle.calle}
                         textTransform="capitalize"
-                        onClick={() => handlerChange(country.calle, country.codigo_postal)}
+                        onClick={() => handlerChange(calle.calle, calle.codigo_postal)}
                         bg="white"
                       >
-                        {country.calle} {' - ' + country.codigo_postal}
+                        {calle.calle}
                       </AutoCompleteItem>
                     ))}
                   </AutoCompleteList>
