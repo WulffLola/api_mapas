@@ -15,6 +15,8 @@ import {
   import { ToastContainer, toast } from 'react-toastify';
   import 'react-toastify/dist/ReactToastify.css';
   import "../App.css"
+  import getAPI from '../config/getData'
+
 
 function CargaOficios() {
 
@@ -52,14 +54,6 @@ function CargaOficios() {
     });
 
   const date = new Date().toISOString().slice(0,10)
-
-  const getAPI = async (url,setEstado,python = true) => {
-    //El parametro opcional PYTHON recibe un booleano que indica si la API a la que consultamos es 
-    //la nuestra en Python o es una externa (Marcelo / PHP). Por eso, la forma de setear el estado es diferente.
-    const resAPI = await fetch(url)
-    const resAPI2 = await resAPI.json()
-    python ? setEstado(resAPI2.data) : setEstado(resAPI2)
-  }
 
   const [detalle, setDetalle] = useState('')
   const [calle, setCalle] = useState('')

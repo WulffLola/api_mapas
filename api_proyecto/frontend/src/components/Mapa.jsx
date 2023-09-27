@@ -7,6 +7,8 @@ import "leaflet-area-select";
 import { AppContext } from '../context/MyContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import getAPI from '../config/getData'
+
 
 function Mapa() {
     const {coordinates} = useContext(AppContext)
@@ -71,7 +73,16 @@ function Mapa() {
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
       shadowSize: [41, 41]
-  });
+    });
+    
+    var redIcon = new L.Icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+    });
 
   const arrayCategorias = [];
   let data = '<option id="00">-- Elija una Actividad Comercial --</option><option id="11">Avicultura y otras actividades primarias</option><option id="91">Bancos y otras instituciones sujetas a la ley de entidades financieras, otras actividades de financiacion</option><option id="61">Comercio por mayor productos agropecuarios, forestales, de la pesca y mineria</option><option id="62">Comercio por menor, alimentos y bebidas</option><option id="92">Compañias de seguros</option><option id="73">Comunicaciones</option><option id="40">Construcción</option><option id="72">Depósito y almacenamiento</option><option id="50">Electricidad, gas y agua</option><option id="94">Empresas o personas dedicadas y/o que reciban ingresos directos por exportaciones</option><option id="34">Fabricación de papel y productos de papel, imprentas y editoriales</option><option id="38">Fabricación de productos metálicos, maquinarias y equipos</option><option id="36">Fabricación de productos minerales no metálicos, excepto derivados del petroleo y del carbon</option><option id="35">Fabricación de sustancias químicas y de productos químicos derivados del petroleo y del carbon, de caucho y de plastico</option><option id="32">Fabricación de textiles, prendas de vestir e industria del cuero</option><option id="33">Industria de la madera y productos de madera</option><option id="31">Industrias manufactureras de productos alimenticios, bebidas y tabacos</option><option id="37">Industrias metálicas básicas</option><option id="93">Locación de bienes inmuebles</option><option id="39">Otras industrias manufactureras</option><option id="63">Restaurantes y hoteles otros establecimientos que expendan, bebidas y comidas, (excepto night clubes y similares).</option><option id="84">Servicios de esparcimiento películas cinematográficas y emisiones de radio y televisión</option><option id="85">Servicios personales y de los hogares servicios de reparación</option><option id="83">Servicios prestados a las empresas</option><option id="82">Servicios prestados al público instrucción pública</option><option id="71">Transporte</option><option id="99">ver todos...</option>'
@@ -92,11 +103,6 @@ function Mapa() {
 
   const resetFields = () => {
     window.location.reload()
-    // correctMessage()
-    // setObservaciones('')
-    // setComercios([])
-    // getInformacionInicial()
-
   }
 
   useEffect(() => {
@@ -127,20 +133,14 @@ function Mapa() {
       setItemSeleccionado(filtrados)
     }
   };
-
-  const getAPI = async (url,setEstado,python = true) => {
-    //El parametro opcional PYTHON recibe un booleano que indica si la API a la que consultamos es 
-    //la nuestra en Python o es una externa (Marcelo / PHP). Por eso, la forma de setear el estado es diferente.
-    const resAPI = await fetch(url)
-    const resAPI2 = await resAPI.json()
-    python ? setEstado(resAPI2.data) : setEstado(resAPI2)
-  }
   
   const sendDatos = async() => {
     if(itemSeleccionados.length > 0){
-      const postForm = await fetch('http://128.0.204.46:8010/nuevaHojaDeRuta/', {method: 'POST', body: JSON.stringify({posicion_inicial: posicionInicial, comercios: itemSeleccionados, observaciones: observaciones})})
-      postForm.status === 200 ? resetFields(): errorMessage()
-    
+      let postForm = await fetch('http://128.0.204.46:8010/nuevaHojaDeRuta/', {method: 'POST', body: JSON.stringify({posicion_inicial: posicionInicial, comercios: itemSeleccionados, observaciones: observaciones})})
+      postForm = await postForm.json()
+      let url = 'http://128.0.204.46:5173/verhojaruta/'+postForm.id_hoja_de_ruta
+      window.open(url,'_blank')
+      postForm.code === 200 ? resetFields(): errorMessage()    
     } else {
         emptyFields()
     }
@@ -149,7 +149,6 @@ function Mapa() {
     setComercios([])
     await getAPI ('https://bahia.gob.ar/comercios/datos/comerciosact.php?ac='+e.target.value,setSubcategorias,false)
     getComercios()
-    
   }
 
   const getOficios = async (e) => {
@@ -209,7 +208,7 @@ function Mapa() {
           </Col>
         </Row>
         <Row>     {/* ACA TENEMOS EL MAPA Y LOS FILTROS*/}
-          <Col className='col-12'> 
+          <Col className='col-9'> 
           <MapContainer  center={[posicionInicial?.LATITUD, posicionInicial?.LONGITUD]} zoom={13} style={{ height: '500px', width: '100%' }}>
             <TileLayer
               attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -223,15 +222,15 @@ function Mapa() {
             </Marker>
             )};
             {oficios?.map((e,i) =>
-              <Marker icon={greenIcon} key={i} position={[e?.latitud, e?.longitud]} style={{color:'red !important'}}>
+              <Marker icon={e.TIPO == "OFICIO" ? greenIcon: redIcon} key={i} position={[e?.latitud, e?.longitud]} style={{color:'red !important'}}>
               <Popup>
-                <center><strong> {"OFICIO / DENUNCIA 0800"} </strong> <br/> {e?.CALLE.toUpperCase()}  {e?.ALTURA.toUpperCase()} </center>
+                <center><strong> {e.TIPO.toUpperCase()} </strong> <br/> {e?.CALLE.toUpperCase()}  {e?.ALTURA.toUpperCase()} </center>
               </Popup>
             </Marker>
             )}; 
           </MapContainer>
           </Col>
-          <Col hidden className='col-3'> 
+          <Col className='col-3'> 
             <p>Aca van los filtros</p>    
             <svg className='m-1' version="1.0" xmlns="http://www.w3.org/2000/svg"
             width="35%" height="35%" viewBox="0 0 1171.000000 1280.000000"

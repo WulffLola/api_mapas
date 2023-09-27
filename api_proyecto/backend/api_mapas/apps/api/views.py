@@ -97,13 +97,17 @@ class syncAPIViewSet(viewsets.ViewSet):
             longitud = float(x['longitud'])
             distancia = math.sqrt((longitud-longitud_orgen)**2+(latitud-latitud_origen)**2)
             if('DOMICILIO' in x):
-                x['CALLE'] = x['DOMICILIO'].split('Nro:')[0].strip()
-                x['ALTURA'] = x['DOMICILIO'].split('Nro:')[1]
-                x['ALTURA'] = x['ALTURA'].split('\n')[0].strip()
                 x['TIPO'] = x['ACTIVIDAD_DESCRIPCION']
                 x['CODIGO_POSTAL']=  x['DOMICILIO'].split('(')[1]
                 x['CODIGO_POSTAL']=  x['CODIGO_POSTAL'].split(')')[0].strip()
                 x['DETALLE'] = x['NOMBRE_FANTASIA']
+                if len(x['DOMICILIO'].split('Nro: '))>1:
+                    x['CALLE'] = x['DOMICILIO'].split('Nro:')[0].strip()
+                    x['ALTURA'] = x['DOMICILIO'].split('Nro:')[1]
+                    x['ALTURA'] = x['ALTURA'].split('\n')[0].strip()
+                else:
+                    x['CALLE'] = x['DOMICILIO']
+                    x['ALTURA'] = 'S/A'
             """
             Aca validamos si lo que recibimos es un Comercio o un Oficio / 0800 para normalizar el JSON de salida al Front.
             """ 
@@ -154,6 +158,7 @@ class syncAPIViewSet(viewsets.ViewSet):
                             'INSPECTORES' : buscar.listadoInspectores,
                             'OBSERVACIONES' : buscar.observaciones,
                             'USUARIO_GENERADOR' : buscar.idusuarioGenerador,
+                            'ID' : buscar.id
                     }
                 }    
             else:
