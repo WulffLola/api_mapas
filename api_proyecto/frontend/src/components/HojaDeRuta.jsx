@@ -28,7 +28,9 @@ export default function HojaDeRuta() {
 
     let date = new Date(HojaDeRuta?.FECHA);
         /* Date format you have */
-    let dateMDY = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    let newMonth = date.getMonth () + 1
+    newMonth < 10 ? newMonth = "0" + newMonth : null
+    let dateMDY = `${date.getDate()}/${newMonth}/${date.getFullYear()}`;
         /* Date converted to MM-DD-YYYY format */
     HojaDeRuta ? HojaDeRuta.COMERCIOS = eval(HojaDeRuta.COMERCIOS) : null
 
@@ -57,7 +59,7 @@ export default function HojaDeRuta() {
                 </Col>
             </Row>
             <Row className='p-5 m-5'>
-                <MapContainer  center={[posicionInicial?.LATITUD, posicionInicial?.LONGITUD]} zoom={16} style={{ height: '600px', width: '100%' }}>
+                <MapContainer  center={[posicionInicial?.LATITUD, posicionInicial?.LONGITUD]} zoom={16} style={{ height: '500px', width: '100%' }}>
                 <TileLayer
                     attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
