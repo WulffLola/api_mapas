@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
-import {Row,Col,Button, Table} from 'react-bootstrap';
+import {Row,Col, Table} from 'react-bootstrap';
 import { useParams } from 'react-router';
 import getAPI from '../config/getData'
 import autoFillZeros from '../config/autoFillZeros';
-import L, { icon } from "leaflet";
+import L from "leaflet";
 import '../config/leaflet_numbered_markers.js'
 import '../config/leaflet_numbered_markers.css'
 
@@ -17,21 +17,17 @@ export default function HojaDeRuta() {
 
     const getHojaDeRuta = async () => {
         setHojaDeRuta([])
-        await getAPI ('http://128.0.204.46:8010/obtenerHojaDeRuta/'+id,setHojaDeRuta)
-
+        await getAPI (process.env.REACT_APP_URL_BACKEND+'/obtenerHojaDeRuta/'+id,setHojaDeRuta)
     }    
 
     const getPosicionInicial = async () => {
-        await getAPI ('http://128.0.204.46:8010/filterbyParams/8000/BLANDENGUES/152',setPosicionInicial)
-
-      }
+        await getAPI (process.env.REACT_APP_URL_BACKEND+'/filterbyParams/8000/BLANDENGUES/152',setPosicionInicial)
+    }
 
     let date = new Date(HojaDeRuta?.FECHA);
-        /* Date format you have */
     let newMonth = date.getMonth () + 1
     newMonth < 10 ? newMonth = "0" + newMonth : null
     let dateMDY = `${date.getDate()}/${newMonth}/${date.getFullYear()}`;
-        /* Date converted to MM-DD-YYYY format */
     HojaDeRuta ? HojaDeRuta.COMERCIOS = eval(HojaDeRuta.COMERCIOS) : null
 
     useEffect(() => {
