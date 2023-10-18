@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -80,14 +83,22 @@ WSGI_APPLICATION = 'api_mapas.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mapasdb',
-        'USER': 'mapasuser',
-        'PASSWORD': '123456*ñ',
-        'HOST': '172.19.0.2',
-        'PORT': '5432'
+  'default': {
+        'ENGINE':   'django.db.backends.postgresql',
+        'NAME':     os.getenv('POSTGRES_NAME'),
+        'USER':     os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST':     os.getenv('POSTGRES_HOST'),
+        'PORT':     os.getenv('POSTGRES_PORT')
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'mapasdb',
+    #     'USER': 'mapasuser',
+    #     'PASSWORD': '123456*ñ',
+    #     'HOST': '172.19.0.2',
+    #     'PORT': '5432'
+    # }
 }
 
 

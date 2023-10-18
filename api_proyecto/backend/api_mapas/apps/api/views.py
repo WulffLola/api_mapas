@@ -17,7 +17,7 @@ class AdressesViewSet(viewsets.ModelViewSet):
 class syncAPIViewSet(viewsets.ViewSet):
     queryset = HojaDeRuta.objects.all()
     serializer_class = HojaDeRutaSerializer
-    def normalizarDireccion (row):
+    def normalizarDireccion (self, row):
         with open('CALLES_CONFLICTIVAS.json') as file:
             datos = json.load(file)
             datos = datos['data']
@@ -29,25 +29,25 @@ class syncAPIViewSet(viewsets.ViewSet):
                         row['PUERTA_5_D1'] = x['ALTURA_NORMALIZADA']
         return row 
     
-    def obtenerCiudad (codigo_postal):
+    def obtenerCiudad (self, codigo_postal):
         with open('CODIGO_POSTAL.json') as file:
             datos = json.load(file)
             for x in datos:
                 if(x['CODIGO_POSTAL'] == codigo_postal):
                     return x['CIUDAD']
 
-    def existeDireccion(row):
+    def existeDireccion(self, row):
         buscarDireccion = Address.objects.filter(codigo_postal=row['CP_8_D1']).filter(calle=row['CALLE_45_D1']).filter(altura=row['PUERTA_5_D1'])
         if(buscarDireccion.count()>0):
             return True
         return False
     
-    def obtenerDatosAPI(url):
+    def obtenerDatosAPI(self, url):
         obtenerCoordenadas = requests.get(url)
         obtenerCoordenadas = json.loads(obtenerCoordenadas.text)
         return obtenerCoordenadas
     
-    def insertarRegistro(row,i):
+    def insertarRegistro(self, row,i):
         try:
             nueva_direccion = Address(codigo_postal = row['CP_8_D1'], calle = row['CALLE_45_D1'], altura = row['PUERTA_5_D1'], partida = row['PARTIDA'], nomenclatura = row['NOMENCLATURA_CAT'], latitud = row['LATITUD'], longitud = row['LONGITUD'])
             nueva_direccion.save()
@@ -55,7 +55,7 @@ class syncAPIViewSet(viewsets.ViewSet):
         except (Exception, psycopg2.Error) as error:
             print("Error al insertar el registro:", error)
             
-    def insertarError(row,error,i):
+    def insertarError(self, row,error,i):
         buscarError = Error.objects.filter(codigo_postal=row['CP_8_D1']).filter(calle=row['CALLE_45_D1']).filter(altura=row['PUERTA_5_D1']).filter(detail = error)
         if(buscarError.count()<1):
             try:
