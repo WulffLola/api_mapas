@@ -24,8 +24,8 @@ class syncAPIViewSet(viewsets.ViewSet):
             for x in datos:
                 if(x['CALLE_CONFLICTIVA'] == row['CALLE_45_D1']) and (x['CODIGO_POSTAL'] == row['CP_8_D1']):
                     if(x['CALLE_NORMALIZADA'] != ''):
-                        row['CALLE_45_D1'] = x['CALLE_NORMALIZADA']      
-                    if(x['ALTURA_NORMALIZADA'] != ''):
+                        row['CALLE_45_D1'] = x['CALLE_NORMALIZADA']     
+                    if hasattr(x, 'ALTURA_NORMALIZADA') and x['ALTURA_NORMALIZADA'] != '': 
                         row['PUERTA_5_D1'] = x['ALTURA_NORMALIZADA']
         return row 
     
@@ -98,6 +98,8 @@ class syncAPIViewSet(viewsets.ViewSet):
             latitud = float(x['latitud'])
             longitud = float(x['longitud'])
             distancia = math.sqrt((longitud-longitud_orgen)**2+(latitud-latitud_origen)**2)
+            latitud_origen = latitud
+            longitud_orgen = longitud
             if('DOMICILIO' in x):
                 x['TIPO'] = x['ACTIVIDAD_DESCRIPCION']
                 x['CODIGO_POSTAL']=  x['DOMICILIO'].split('(')[1]
@@ -139,7 +141,7 @@ class syncAPIViewSet(viewsets.ViewSet):
             }  
         except (Exception, psycopg2.Error) as error:
             print("Error al insertar el error:", error)
-            res = {
+            res = {ALTURA_NORMALIZADA
                 'code': 400,
                 'succcess' : False,
                 'msg' : 'Error al crear la Hoja de Ruta.'
@@ -380,7 +382,7 @@ class OficiosViewSet(viewsets.ViewSet):
             buscarOficioDuplicado = Oficios.objects.filter(calle=body['calle']).filter(altura=body['altura']).filter(detalle=body['detalle'])
             if(buscarOficioDuplicado.count()<1):
                 try:
-                    nuevo_oficio = Oficios(fecha = body['fecha'],tipo = 'OFICIO',detalle=body['detalle'],calle=body['calle'],altura=body['altura'],estado='CREADO',id_hoja_ruta = -1,latitud = data['LATITUD'], longitud = data['LONGITUD'])
+                    nuevo_oficio = Oficios(fecha = body['fecha'],tipo = body['tipo'],detalle=body['detalle'],calle=body['calle'],altura=body['altura'],estado='CREADO',id_hoja_ruta = -1,latitud = data['LATITUD'], longitud = data['LONGITUD'])
                     nuevo_oficio.save()
                     print("Oficio insertado")  
                     res = {
