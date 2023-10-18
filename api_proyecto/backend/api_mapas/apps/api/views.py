@@ -24,8 +24,10 @@ class syncAPIViewSet(viewsets.ViewSet):
             for x in datos:
                 if(x['CALLE_CONFLICTIVA'] == row['CALLE_45_D1']) and (x['CODIGO_POSTAL'] == row['CP_8_D1']):
                     if(x['CALLE_NORMALIZADA'] != ''):
-                        row['CALLE_45_D1'] = x['CALLE_NORMALIZADA']                    
-        return row
+                        row['CALLE_45_D1'] = x['CALLE_NORMALIZADA']      
+                    if(x['ALTURA_NORMALIZADA'] != ''):
+                        row['PUERTA_5_D1'] = x['ALTURA_NORMALIZADA']
+        return row 
     
     def obtenerCiudad (codigo_postal):
         with open('CODIGO_POSTAL.json') as file:
