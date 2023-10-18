@@ -141,7 +141,7 @@ class syncAPIViewSet(viewsets.ViewSet):
             }  
         except (Exception, psycopg2.Error) as error:
             print("Error al insertar el error:", error)
-            res = {ALTURA_NORMALIZADA
+            res = {
                 'code': 400,
                 'succcess' : False,
                 'msg' : 'Error al crear la Hoja de Ruta.'
