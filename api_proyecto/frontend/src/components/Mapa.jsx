@@ -7,7 +7,7 @@ import "leaflet-area-select";
 import { AppContext } from '../context/MyContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {MultiSelect, SimpleSelect} from 'mbb-testing'
+import {MultiSelect} from 'mbb-components'
 
 function Mapa() {
     const {coordinates} = useContext(AppContext)
@@ -21,8 +21,6 @@ function Mapa() {
     const [longitudes, setLongitudes] = useState([])
     const [itemSeleccionados, setItemSeleccionado] = useState([])
     const [observaciones, setObservaciones] = useState("")
-    const [z, setZ] = useState([])
-
     const emptyFields = () => toast.error('Debe haber mínimo algun comercio seleccionado.', {
       position: "bottom-right",
       autoClose: 5000,
@@ -150,7 +148,7 @@ function Mapa() {
   
   const sendDatos = async() => {
     if(itemSeleccionados.length > 0){
-      const postForm = await fetch('http://128.0.204.46:8010/nuevaHojaDeRuta/', {method: 'POST', body: JSON.stringify({posicion_inicial: posicionInicial, comercios: itemSeleccionados, observaciones: observaciones})})
+      const postForm = await fetch('http://128.0.204.47:8010/nuevaHojaDeRuta/', {method: 'POST', body: JSON.stringify({posicion_inicial: posicionInicial, comercios: itemSeleccionados, observaciones: observaciones})})
       postForm.status === 200 ? resetFields(): errorMessage()
     
     } else {
@@ -159,14 +157,35 @@ function Mapa() {
   }
   const getSubcategorias = async (e) => {
     setComercios([])
-    await getAPI ('https://bahia.gob.ar/comercios/datos/comerciosact.php?ac='+e.value,setSubcategorias,false)
-    getComercios()
-    console.log("getsub")
-    
+    let form = new FormData();
+    form.append('ids',JSON.stringify(e.target.value))
+    await fetch('http://128.0.203.119/comercios/datos/actividades_varias.php', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => {
+        if (response.status !== 200) {
+          throw new Error(response.statusText);
+        }
+
+        let data = response.json();
+        setSubcategorias(data)
+
+      })
+      .then(() => {
+        console.log('query ejecutada')
+      })
+      .catch((err) => {
+        console.log('Error: '+err.toString())
+      });    
   }
 
   const getOficios = async () => {
-    await getAPI ('http://128.0.204.46:8010/oficios/',setOficios)
+    await getAPI ('http://128.0.204.47:8010/oficios/',setOficios)
   }
 
   const getComercios = async () => {
@@ -175,7 +194,7 @@ function Mapa() {
   }
 
   const getInformacionInicial = async () => {
-    await getAPI ('http://128.0.204.46:8010/filterbyParams/8000/BLANDENGUES/152',setPosicionInicial)
+    await getAPI ('http://128.0.204.47:8010/filterbyParams/8000/BLANDENGUES/152',setPosicionInicial)
     setCategorias(arrayCategorias);   
   }
   
@@ -202,23 +221,29 @@ function Mapa() {
                       <option key={option.value} value={option.value}>{option.text.toUpperCase()}</option>
                     )};
                   </Form.Select> */}
-                  <MultiSelect options={categorias} onChange={(e) => console.log(e)} />
+                  <MultiSelect options={categorias} />
                 </Form.Group>
             </Form>
+          </Col>
+          <Col className="col-1 mt-5">
+            <Button variant="success" onClick={(e) => getSubcategorias(e)}>Buscar</Button>{' '}
           </Col>
           <Col className="col-5" >
             <Form>
                 <Form.Group className="m-3">
                     <Form.Label>Sub-Actividad: </Form.Label>
-                    <Form.Select id="selectComercios" onChange={() => getComercios()}>
+                    {/* <Form.Select id="selectComercios" onChange={() => getComercios()}>
                     {subCategorias?.map(option =>
                       <option key={option.ACTIVIDAD_CODIGO} value={option.ACTIVIDAD_CODIGO}>{option.ACTIVIDAD_DESCRIPCION.toUpperCase()}</option>
                     )};
-                  </Form.Select>
+                  </Form.Select> */}
+                 <MultiSelect options={subCategorias} />
+
+                  
                 </Form.Group>
             </Form>
           </Col>
-          <Col className="col-2 mt-5">
+          <Col className="col-1 mt-5">
             <Button variant="success" onClick={()=> getComerciosInArea(coordinates)}>Filtrar</Button>{' '}
           </Col>
         </Row>

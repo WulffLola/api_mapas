@@ -16,7 +16,7 @@ import {
   import 'react-toastify/dist/ReactToastify.css';
   import "../App.css"
   import getAPI from '../config/getData'
-
+  import { SimpleSelect } from 'mbb-components';
 
 function CargaOficios() {
 
@@ -60,51 +60,63 @@ function CargaOficios() {
   const [codigoPostal, setCodigoPostal] = useState('')
   const [altura, setAltura] = useState("")
   const [fecha, setFecha] = useState(date)
+  const [cp, setCp] = useState("8000")
+  
   const [codigoPostalFiltradoCalles, setCodigoPostalFiltradoCalles] = useState('8000')
 
   const [calles, setCalles] = useState()
 
   const getCalles = async () => {
-    await getAPI ('http://128.0.204.46:8010/listUniqueAddressNames/',setCalles)
+    await getAPI ('http://128.0.202.248:8499/calles/calles/',setCalles,false)
+    
   }
 
+
+
+  let newArrayCalles = [];
+  calles?.map((e)=> {
+    let option = {
+      label : e.CALLE,
+      value : e.CALLE,
+      cp : e.CODIGO_POSTAL
+    }
+    newArrayCalles.push(option);
+  })
+  newArrayCalles = newArrayCalles.sort()
+  
+  
   const submitForm = async() => {
     if([calle, altura, detalle, codigoPostal, fecha].every((value) => value !== "")){
-      const postForm = await fetch('http://128.0.204.46:8010/registerOficio/', {method: 'POST', body: JSON.stringify({fecha: fecha, calle: calle, altura: altura, detalle: detalle, codigo_postal: codigoPostal})})
+      const postForm = await fetch('http://128.0.204.47:8010/registerOficio/', {method: 'POST', body: JSON.stringify({fecha: fecha, calle: calle, altura: altura, detalle: detalle, codigo_postal: codigoPostal})})
       postForm.status === 200 ? resetFields() : incorrectDate()
-    
+      
     } else {
-        emptyFields()
+      emptyFields()
     }
   }
-
-  const handlerChange = (calle,codigo_postal) =>{
-    setCalle(calle)
-    setCodigoPostal(codigo_postal)    
-
+  
+  const handlerChangeCalle = (e) =>{
+    setCp(e.target.value)    
   } 
-
+  
   const resetFields = () => {
     correctForm()
     setFecha(date)
     setDetalle('')
     setCalle('')
     setAltura('')
-  
+    
   }
-
-  const getCalles2 = async (e) => {
-    e? setCodigoPostalFiltradoCalles(e.target.value) : null
-    await getAPI ('http://128.0.202.248:8499/calles/filtro_por_codigo_postal/'+codigoPostalFiltradoCalles,setCalles)
-  }
-
   useEffect(() => {
     getCalles()
   }, [])
-
+  
   if(!calles){
     return null
   }
+  
+  const callesFilt = newArrayCalles.filter( obj => obj.cp === cp)
+ 
   return (
     <div className="App">
       <img src="https://www.bahia.gob.ar/wp-content/uploads/2018/04/municipio-de-bahia-blanca.png"></img>
@@ -122,12 +134,12 @@ function CargaOficios() {
           </Col>
           <Col className='col-6'>
             <Form.Label>Ciudad</Form.Label>
-              <Form.Select>
+               <Form.Select onChange={handlerChangeCalle}>
                   <option value="8000">Bahia Blanca</option>
                   <option value="8105">Cerri</option>
                   <option value="8132">Medanos</option>
                   <option value="8103">Ingeniero White</option>
-                </Form.Select>
+                </Form.Select> 
           </Col>
         </Row>
         <Row>
@@ -135,7 +147,9 @@ function CargaOficios() {
             <Flex justify="start" align="center" w="full">
               <FormControl w="1000">
                 <Form.Label textAlign="center">Calle</Form.Label>
-                <AutoComplete>
+                <SimpleSelect options={callesFilt}>
+                  </SimpleSelect> 
+                {/* <AutoComplete>
                   <AutoCompleteInput  autoComplete="off" variant="filled" color="grey" style={{borderColor: "lightgray", borderRadius: "5px", width: '100% !important'  }}  defaultValue={calle}/>
                   <AutoCompleteList color="black" bg = "white">
                     {calles.map((calle, cid) => (
@@ -150,7 +164,7 @@ function CargaOficios() {
                       </AutoCompleteItem>
                     ))}
                   </AutoCompleteList>
-                </AutoComplete>
+                </AutoComplete> */}
                 <FormHelperText></FormHelperText>
               </FormControl>
             </Flex>

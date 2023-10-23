@@ -186,28 +186,28 @@ class syncAPIViewSet(viewsets.ViewSet):
         repetidos = 0
         with open('data.json') as archivo:
             datos = json.load(archivo)
-            for i in range(0,len(datos)) :                
+            for i in range(71281,len(datos)) :                
                 print("Rg. "+str(i))
                 row = datos[i]
                 if(row['CP_8_D1'] is not None) and (row['CALLE_45_D1'] is not None) and (row['PUERTA_5_D1'] is not None) and (row['LOCALIDAD_30_D1'] is not None):
-                    row = self.normalizarDireccion(row)
+                    row = self.normalizarDireccion(self, row)
                     if self.existeDireccion(row) == False:
                         toSearch = 'C=' + str(row['CALLE_45_D1']) + '&A=' + str(row['PUERTA_5_D1']) + '&P=' + str(row['CP_8_D1'])
-                        data = self.obtenerDatosAPI('http://128.0.203.119/intranet/geo/cuimCalles.php?'+toSearch)
+                        data = self.obtenerDatosAPI(self, 'http://128.0.203.119/intranet/geo/cuimCalles.php?'+toSearch)
                         latitud = data['lat']
                         longitud = data['lng']
                         if (latitud != '') and (longitud != ''):
                             row['LATITUD'] = latitud
                             row['LONGITUD'] = longitud
-                            self.insertarRegistro(row,i)
+                            self.insertarRegistro(self, row,i)
                         else:
                             toSearch = str(row['CALLE_45_D1']) + "+" + str(row['PUERTA_5_D1']) + "+" + str(row['LOCALIDAD_30_D1'])
-                            data = self.obtenerDatosAPI('https://nominatim.openstreetmap.org/search.php?q='+toSearch+'&format=json')
+                            data = self.obtenerDatosAPI(self,'https://nominatim.openstreetmap.org/search.php?q='+toSearch+'&format=json')
                             if(len(data)>0):
                                 obtenerCoordenadasWeb = data[0]
                                 row['LATITUD'] = obtenerCoordenadasWeb['lat']
                                 row['LONGITUD'] = obtenerCoordenadasWeb['lon'] 
-                                self.insertarRegistro(row,i)
+                                self.insertarRegistro(self, row,i)
                             else:
                                 error = "NO SE PUDO GEOLOCALIZAR"
                                 self.insertarError(row,error,i)
@@ -232,7 +232,7 @@ class filterbyParams (viewsets.ViewSet):
                     'PARTIDA':'',
                     'NOMENCLATURA_CAT':''
                 }
-            row = syncAPIViewSet.normalizarDireccion(row)
+            row = syncAPIViewSet.normalizarDireccion(self, row)
             buscar = Address.objects.filter(codigo_postal = codigo_postal.upper(), calle = calle.upper(), altura = altura).first()
             if(buscar):
                 response = {
@@ -250,13 +250,13 @@ class filterbyParams (viewsets.ViewSet):
             else:
                 #Aca podemos buscar en el de Marcelo
                 toSearch = 'C=' + str(row['CALLE_45_D1']) + '&A=' + str(row['PUERTA_5_D1']) + '&P=' + str(row['CP_8_D1'])
-                data = syncAPIViewSet.obtenerDatosAPI('http://128.0.203.119/intranet/geo/cuimCalles.php?'+toSearch)
+                data = syncAPIViewSet.obtenerDatosAPI(self, 'http://128.0.203.119/intranet/geo/cuimCalles.php?'+toSearch)
                 latitud = data['lat']
                 longitud = data['lng']
                 if (latitud != '') and (longitud != ''):
                     row['LATITUD'] = latitud
                     row['LONGITUD'] = longitud
-                    syncAPIViewSet.insertarRegistro(row,'A')
+                    syncAPIViewSet.insertarRegistro(self, row,'A')
                     buscar = Address.objects.filter(codigo_postal = codigo_postal.upper(), calle = calle.upper(), altura = altura).first()
                     response = {
                     'code': 200,
@@ -275,12 +275,12 @@ class filterbyParams (viewsets.ViewSet):
                     ciudad = syncAPIViewSet.obtenerCiudad(row['CP_8_D1'])
                     print (ciudad)
                     toSearch = str(row['CALLE_45_D1']) + "+" + str(row['PUERTA_5_D1']) + "+" + str(ciudad)
-                    data = syncAPIViewSet.obtenerDatosAPI('https://nominatim.openstreetmap.org/search.php?q='+toSearch+'&format=json')
+                    data = syncAPIViewSet.obtenerDatosAPI(self, 'https://nominatim.openstreetmap.org/search.php?q='+toSearch+'&format=json')
                     if(len(data)>0):
                         obtenerCoordenadasWeb = data[0]
                         row['LATITUD'] = obtenerCoordenadasWeb['lat']
                         row['LONGITUD'] = obtenerCoordenadasWeb['lon'] 
-                        syncAPIViewSet.insertarRegistro(row,'A')
+                        syncAPIViewSet.insertarRegistro(self, row,'A')
                         buscar = Address.objects.filter(codigo_postal = codigo_postal.upper(), calle = calle.upper(), altura = altura).first()
                         response = {
                             'code': 200,
