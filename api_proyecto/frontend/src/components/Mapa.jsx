@@ -11,8 +11,7 @@ import {MultiSelect} from 'mbb-components'
 
 function Mapa() {
     const {coordinates} = useContext(AppContext)
-
-    const [comercios, setComercios] = useState()
+    const [comercios, setComercios] = useState([])
     const [categorias, setCategorias] = useState([])
     const [subCategorias, setSubcategorias] = useState()
     const [posicionInicial, setPosicionInicial] = useState()
@@ -21,6 +20,9 @@ function Mapa() {
     const [longitudes, setLongitudes] = useState([])
     const [itemSeleccionados, setItemSeleccionado] = useState([])
     const [observaciones, setObservaciones] = useState("")
+    const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState([])
+    const [inspectores, setInspectores] = useState([])
+    const [subCatSeleccionada, setSubCatSeleccionada] = useState([])
     const emptyFields = () => toast.error('Debe haber mínimo algun comercio seleccionado.', {
       position: "bottom-right",
       autoClose: 5000,
@@ -100,6 +102,17 @@ function Mapa() {
     }    
   })
 
+  let arrayInspectores = [];
+  inspectores?.map((e)=> {
+    let option = {
+      label : e.nombre.toUpperCase() +" "+ e.apellido.toUpperCase(),
+      value : e.id,
+      legajo : e.legajo
+    }
+    arrayInspectores.push(option);
+  })
+  arrayInspectores = arrayInspectores.sort()
+
   const resetFields = () => {
     window.location.reload()
     // correctMessage()
@@ -155,24 +168,25 @@ function Mapa() {
         emptyFields()
     }
   }
-  const getSubcategorias = async (e) => {
+  const getSubcategorias = async () => {
     setComercios([])
     let form = new FormData();
-    form.append('ids',JSON.stringify(e.target.value))
+    form.append('ids',JSON.stringify())
     await fetch('http://128.0.203.119/comercios/datos/actividades_varias.php', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(categoriasSeleccionadas),
     })
-      .then((response) => {
+      .then(async (response) => {
         if (response.status !== 200) {
           throw new Error(response.statusText);
         }
 
-        let data = response.json();
+        
+        let data = await response.json();
         setSubcategorias(data)
 
       })
@@ -183,15 +197,24 @@ function Mapa() {
         console.log('Error: '+err.toString())
       });    
   }
-
   const getOficios = async () => {
     await getAPI ('http://128.0.204.47:8010/oficios/',setOficios)
   }
 
-  const getComercios = async () => {
-    let value = document.getElementById('selectComercios').value
-    await getAPI ('https://bahia.gob.ar/comercios/datos/xcomerciosxcategoria.php?ac='+value,setComercios,false)
+  const getComercios = async (e) => {
+    // await getAPI ('https://bahia.gob.ar/comercios/datos/xcomerciosxcategoria.php?ac='+e,setComercios,false)
+    const res = await fetch('https://bahia.gob.ar/comercios/datos/xcomerciosxcategoria.php?ac='+e)
+    const json = await res.json()
+    
+    setComercios([...json])
+
   }
+
+  const getInspectores = async (e) => {
+    await getAPI ('http://128.0.203.119/comercios/datos/inspectores_fiscalizacion.php',setInspectores,false)
+  }
+
+  console.log(comercios)
 
   const getInformacionInicial = async () => {
     await getAPI ('http://128.0.204.47:8010/filterbyParams/8000/BLANDENGUES/152',setPosicionInicial)
@@ -201,7 +224,9 @@ function Mapa() {
   useEffect(() => {
     getInformacionInicial()
     getOficios()
+    getInspectores()
   }, [])
+  console.log(arrayInspectores)
 
   if(!categorias || !posicionInicial || !oficios){
     return null
@@ -221,7 +246,7 @@ function Mapa() {
                       <option key={option.value} value={option.value}>{option.text.toUpperCase()}</option>
                     )};
                   </Form.Select> */}
-                  <MultiSelect options={categorias} />
+                  <MultiSelect options={categorias} onChange={(e) => setCategoriasSeleccionadas(e)}/>
                 </Form.Group>
             </Form>
           </Col>
@@ -237,7 +262,7 @@ function Mapa() {
                       <option key={option.ACTIVIDAD_CODIGO} value={option.ACTIVIDAD_CODIGO}>{option.ACTIVIDAD_DESCRIPCION.toUpperCase()}</option>
                     )};
                   </Form.Select> */}
-                 <MultiSelect options={subCategorias} />
+                 <MultiSelect options={subCategorias} onChange={(e) => e.map((e) => getComercios(e.value)) }/>
 
                   
                 </Form.Group>
@@ -248,18 +273,29 @@ function Mapa() {
           </Col>
         </Row>
         <Row>     {/* ACA TENEMOS EL MAPA Y LOS FILTROS*/}
-          <Col className='col-12'> 
+          <Col className='col-8'> 
           <MapContainer  center={[posicionInicial?.LATITUD, posicionInicial?.LONGITUD]} zoom={13} style={{ height: '500px', width: '100%', zIndex: "0" }}>
             <TileLayer
               attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             /><AreaSelect />
-           {comercios?.map((e,i) =>
-              <Marker icon={blueIcon}  key={i} position={[e?.latitud, e?.longitud]}>
-              <Popup>
-                <center><strong> {e?.NOMBRE_FANTASIA.toUpperCase()} </strong> <br/> {e?.DOMICILIO.toUpperCase().split('(')[0]}</center>
-              </Popup>
-            </Marker>
+           {/* {comercios?.map((e) => e.map((j,i ) => (
+            <Marker icon={blueIcon}  key={i} position={[j?.latitud, j?.longitud]}>
+            <Popup>
+              <center><strong> {j?.NOMBRE_FANTASIA.toUpperCase()} </strong> <br/> {j?.DOMICILIO.toUpperCase().split('(')[0]}</center>
+            </Popup>
+          </Marker>
+           ) )
+              
+            )}; */}
+            {comercios?.map((e,i) => (
+            <Marker icon={blueIcon}  key={i} position={[e?.latitud, e?.longitud]}>
+            <Popup>
+              <center><strong> {e?.NOMBRE_FANTASIA.toUpperCase()} </strong> <br/> {e?.DOMICILIO.toUpperCase().split('(')[0]}</center>
+            </Popup>
+          </Marker>
+            )
+              
             )};
             {
               
@@ -309,7 +345,7 @@ function Mapa() {
                     </tr>
                   </thead>
                   <tbody id='seleccionador-comercios'>         
-                    {comercios?.map((e,i) =>
+                    {/* {comercios?.map((e,i) =>
                       <tr key={i}>
                         <td>
                           <Form.Check // prettier-ignore
@@ -329,7 +365,7 @@ function Mapa() {
                           {e?.DOMICILIO.toUpperCase().split(')')[0]+')'}
                         </td>
                       </tr>
-                    )}
+                    )} */}
                     {oficios?.map((e,i) =>
                       <tr key={i}> 
                         <td>
@@ -358,10 +394,12 @@ function Mapa() {
         <Row>    {/* ACA TENEMOS EL SELECTOR DE LOS INSPECTORES Y EL GENERADOR DE LA HOJA DE RUTA*/}
           <Col className='col-3'> {/* SELECCIONAMOS LOS INSPECTORES */}
           <Form.Group className="mb-3">
-            <Form.Label>Seleccione un Inspector</Form.Label>
+          <Form.Label>Inspectores</Form.Label>
+          <MultiSelect options={arrayInspectores} onChange={(e) => console.log(e)}/>
+            {/* <Form.Label>Seleccione un Inspector</Form.Label>
               <Form.Select>
                 <option value="1">Inspector Martínez P.</option>
-              </Form.Select>
+              </Form.Select> */}
             </Form.Group>
           </Col>
           <Col className='col-9'>

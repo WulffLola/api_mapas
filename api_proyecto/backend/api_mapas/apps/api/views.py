@@ -28,11 +28,13 @@ class syncAPIViewSet(viewsets.ViewSet):
                     if hasattr(x, 'ALTURA_NORMALIZADA') and x['ALTURA_NORMALIZADA'] != '': 
                         row['PUERTA_5_D1'] = x['ALTURA_NORMALIZADA']
         return row 
-    
-    def obtenerCiudad (self, codigo_postal):
+    @classmethod
+    def obtenerCiudad (cls, codigo_postal):
+        print('llegue a obtener ciudad')
         with open('CODIGO_POSTAL.json') as file:
             datos = json.load(file)
             for x in datos:
+                print(type(codigo_postal), type(x['CODIGO_POSTAL']))
                 if(x['CODIGO_POSTAL'] == codigo_postal):
                     return x['CIUDAD']
 
@@ -270,8 +272,9 @@ class filterbyParams (viewsets.ViewSet):
                             'LONGITUD' : buscar.longitud
                     }
                 }
-                else:
+                else:                    
                     #Buscamos en el JSON de Codigos Postales, el CP correspondiente y devolvemos la ciudad para poder geolocalizar.
+                    
                     ciudad = syncAPIViewSet.obtenerCiudad(row['CP_8_D1'])
                     print (ciudad)
                     toSearch = str(row['CALLE_45_D1']) + "+" + str(row['PUERTA_5_D1']) + "+" + str(ciudad)
@@ -373,10 +376,11 @@ class getIncompletesAddress (viewsets.ViewSet):
         
 class OficiosViewSet(viewsets.ViewSet):
     def registerOficio(self,request):
-        res = {}
+        res = {}        
         body_unicode = request.body.decode('utf-8')
-        body = json.loads(body_unicode)
+        body = json.loads(body_unicode)        
         response = filterbyParams.search(filterbyParams,'',body['codigo_postal'],body['calle'],body['altura'])
+        print(response.__dict__)
         if response.data['code'] == 200 :
             data = response.data['data']
             buscarOficioDuplicado = Oficios.objects.filter(calle=body['calle']).filter(altura=body['altura']).filter(detalle=body['detalle'])

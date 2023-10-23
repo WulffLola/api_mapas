@@ -57,21 +57,16 @@ function CargaOficios() {
 
   const [detalle, setDetalle] = useState('')
   const [calle, setCalle] = useState('')
-  const [codigoPostal, setCodigoPostal] = useState('')
   const [altura, setAltura] = useState("")
   const [fecha, setFecha] = useState(date)
   const [cp, setCp] = useState("8000")
-  
-  const [codigoPostalFiltradoCalles, setCodigoPostalFiltradoCalles] = useState('8000')
-
   const [calles, setCalles] = useState()
+  const [tipo, setTipo] = useState()
 
   const getCalles = async () => {
     await getAPI ('http://128.0.202.248:8499/calles/calles/',setCalles,false)
     
   }
-
-
 
   let newArrayCalles = [];
   calles?.map((e)=> {
@@ -86,8 +81,8 @@ function CargaOficios() {
   
   
   const submitForm = async() => {
-    if([calle, altura, detalle, codigoPostal, fecha].every((value) => value !== "")){
-      const postForm = await fetch('http://128.0.204.47:8010/registerOficio/', {method: 'POST', body: JSON.stringify({fecha: fecha, calle: calle, altura: altura, detalle: detalle, codigo_postal: codigoPostal})})
+    if([calle, altura, detalle, cp, fecha].every((value) => value !== "")){
+      const postForm = await fetch('http://128.0.204.47:8010/registerOficio/', {method: 'POST', body: JSON.stringify({fecha: fecha, calle: calle, altura: altura, detalle: detalle, codigo_postal: cp, tipo: tipo})})
       postForm.status === 200 ? resetFields() : incorrectDate()
       
     } else {
@@ -147,7 +142,7 @@ function CargaOficios() {
             <Flex justify="start" align="center" w="full">
               <FormControl w="1000">
                 <Form.Label textAlign="center">Calle</Form.Label>
-                <SimpleSelect options={callesFilt}>
+                <SimpleSelect options={callesFilt} w={287} onChange={(event) => setCalle(event.value)} >
                   </SimpleSelect> 
                 {/* <AutoComplete>
                   <AutoCompleteInput  autoComplete="off" variant="filled" color="grey" style={{borderColor: "lightgray", borderRadius: "5px", width: '100% !important'  }}  defaultValue={calle}/>
@@ -159,7 +154,7 @@ function CargaOficios() {
                         textTransform="capitalize"
                         onClick={() => handlerChange(calle.calle, calle.codigo_postal)}
                         bg="white"
-                      >
+                      >-
                         {calle.calle}
                       </AutoCompleteItem>
                     ))}
@@ -175,6 +170,16 @@ function CargaOficios() {
               <Form.Control type = "number"  onChange={(event) => setAltura(event.target.value)} value={altura} autoComplete="off"/>
             </Form.Group>
           </Col>
+        </Row>
+        <Row>
+          <Form.Group className="mb-3">
+            <Form.Label>Tipo</Form.Label>
+            <Form.Select onChange={(event) => setTipo(event.target.value)} value={tipo}>
+                  {/* <option value="EXPEDIENTE">Expediente</option> */}
+                  <option value="0800">Denuncia</option>
+                  <option value="OFICIO">Oficio</option>
+                </Form.Select> 
+          </Form.Group>
         </Row>
         <Row>
           <Form.Group className="mb-3">
