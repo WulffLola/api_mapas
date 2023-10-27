@@ -144,22 +144,6 @@ function CargaOficios() {
                 <Form.Label textAlign="center">Calle</Form.Label>
                 <SimpleSelect options={callesFilt} w={287} onChange={(event) => setCalle(event.value)} >
                   </SimpleSelect> 
-                {/* <AutoComplete>
-                  <AutoCompleteInput  autoComplete="off" variant="filled" color="grey" style={{borderColor: "lightgray", borderRadius: "5px", width: '100% !important'  }}  defaultValue={calle}/>
-                  <AutoCompleteList color="black" bg = "white">
-                    {calles.map((calle, cid) => (
-                      <AutoCompleteItem
-                      key={`option-${cid}`}    
-                        value={calle.calle}
-                        textTransform="capitalize"
-                        onClick={() => handlerChange(calle.calle, calle.codigo_postal)}
-                        bg="white"
-                      >-
-                        {calle.calle}
-                      </AutoCompleteItem>
-                    ))}
-                  </AutoCompleteList>
-                </AutoComplete> */}
                 <FormHelperText></FormHelperText>
               </FormControl>
             </Flex>

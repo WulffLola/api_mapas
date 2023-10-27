@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
+import { MapContainer, TileLayer, Marker} from 'react-leaflet';
 import {Row,Col, Table} from 'react-bootstrap';
 import { useParams } from 'react-router';
 import getAPI from '../config/getData'
@@ -8,20 +8,23 @@ import L from "leaflet";
 import '../config/leaflet_numbered_markers.js'
 import '../config/leaflet_numbered_markers.css'
 
+
 export default function HojaDeRuta() {
 
-    const [HojaDeRuta, setHojaDeRuta] = useState()
+    const [HojaDeRuta, setHojaDeRuta] = useState([])
     const [posicionInicial, setPosicionInicial] = useState()
 
     const { id } = useParams();
 
     const getHojaDeRuta = async () => {
         setHojaDeRuta([])
-        await getAPI (process.env.REACT_APP_URL_BACKEND+'/obtenerHojaDeRuta/'+id,setHojaDeRuta)
+        await getAPI (`http://128.0.204.47:8010/obtenerHojaDeRuta/${id}`,setHojaDeRuta)
     }    
 
+ 
+
     const getPosicionInicial = async () => {
-        await getAPI (process.env.REACT_APP_URL_BACKEND+'/filterbyParams/8000/BLANDENGUES/152',setPosicionInicial)
+        await getAPI (`http://128.0.204.47:8010/filterbyParams/8000/BLANDENGUES/152`,setPosicionInicial)
     }
 
     let date = new Date(HojaDeRuta?.FECHA);
@@ -38,7 +41,6 @@ export default function HojaDeRuta() {
     if(!HojaDeRuta || !posicionInicial){
         return null
     }
-
     return (
         <div className="App">
             <img src="https://www.bahia.gob.ar/wp-content/uploads/2018/04/municipio-de-bahia-blanca.png"></img>
@@ -105,12 +107,16 @@ export default function HojaDeRuta() {
 
             <Row className='text-left p-5'>
                 <Col className='col-12' style={{'text-align' : 'left'}}>
-                    <h6 className='text-left'>Inspectores Asignados: {HojaDeRuta?.INSPECTORES}</h6>
+                <h6 className='text-left'>Inspectores asignados:</h6>
+                    {HojaDeRuta?.INSPECTORES.map((e, i) => 
+                    <p key = {i} className='text-left'>{e?.label} </p>
+                    )}
                 </Col>
             </Row>
             <Row className='text-left p-5'>
                 <Col className='col-12' style={{'text-align' : 'left'}}>
-                    <h6 className='text-left'>Observaciones: {HojaDeRuta?.OBSERVACIONES}</h6>
+                    <h6 className='text-left'>Observaciones:</h6>
+                    <p>{HojaDeRuta?.OBSERVACIONES}</p>
                 </Col>
             </Row>
         </div>

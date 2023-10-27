@@ -92,6 +92,7 @@ class syncAPIViewSet(viewsets.ViewSet):
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
         direcciones = body['comercios']
+        inspectores = body['inspectores']
         observaciones = body['observaciones']
         latitud_origen = float(body['posicion_inicial']['LATITUD'])
         longitud_orgen = float(body['posicion_inicial']['LONGITUD'])
@@ -128,13 +129,15 @@ class syncAPIViewSet(viewsets.ViewSet):
                 'longitud': x['longitud'],
                 'DISTANCIA_AL_ORIGEN' : distancia,
             }
+            
+            
             data.append(item)
             
         #Una vez calculadas las distancias entre puntos, las ordenamos de menor a mayor. 
             
         data = sorted(data, key=lambda x: x['DISTANCIA_AL_ORIGEN'])  
         try:
-            row = HojaDeRuta(listadoAInspeccionar = str(data),listadoInspectores = "[MARTINEZ, P.]",observaciones = observaciones,idusuarioGenerador=1)
+            row = HojaDeRuta(listadoAInspeccionar = str(data),listadoInspectores = inspectores ,observaciones = observaciones,idusuarioGenerador=1)            
             row.save()
             res = {
                 'code': 200,
@@ -151,9 +154,13 @@ class syncAPIViewSet(viewsets.ViewSet):
         
         return Response(data=res, status=res.get('code'))
     
-    def obtenerHojaDeRuta(self,request,id_hoja_de_ruta = 'null'):
+    def obtenerHojaDeRuta(self,request,id_hoja_de_ruta = 'null'):        
         if(id_hoja_de_ruta != 'null'):
-            buscar = HojaDeRuta.objects.filter(id = id_hoja_de_ruta).first()
+            buscar = HojaDeRuta.objects.filter(id = id_hoja_de_ruta).first()            
+            # debido a un BUG de REACT debimos forzar para que funcione en el back
+            listadoInspectores = json.loads(json.dumps(buscar.listadoInspectores))
+            listadoInspectores = [object_json for object_json in json.loads(listadoInspectores.replace('\'', '"'))]
+            
             if(buscar):
                 response = {
                     'code': 200,
@@ -161,12 +168,12 @@ class syncAPIViewSet(viewsets.ViewSet):
                     'data' : {
                             'FECHA' : buscar.fecha,
                             'COMERCIOS' : buscar.listadoAInspeccionar,
-                            'INSPECTORES' : buscar.listadoInspectores,
+                            'INSPECTORES' : listadoInspectores,
                             'OBSERVACIONES' : buscar.observaciones,
                             'USUARIO_GENERADOR' : buscar.idusuarioGenerador,
                             'ID' : buscar.id
                     }
-                }    
+                }
             else:
                 response = {
                     'code': 404,
@@ -180,7 +187,8 @@ class syncAPIViewSet(viewsets.ViewSet):
                 'succcess' : False,
                 'data' : {},
                 'msg' : 'INGRESE PARAMETRO ID HOJA DE RUTA'
-            }                   
+            }
+        print(response)
         return Response(data=response, status=response.get('code'))
         
         

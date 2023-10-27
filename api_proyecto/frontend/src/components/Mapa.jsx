@@ -23,6 +23,8 @@ function Mapa() {
     const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState([])
     const [inspectores, setInspectores] = useState([])
     const [subCatSeleccionada, setSubCatSeleccionada] = useState([])
+    const [inspectoresSeleccionados, setInspectoresSeleccionados] = useState([])
+
     const emptyFields = () => toast.error('Debe haber mínimo algun comercio seleccionado.', {
       position: "bottom-right",
       autoClose: 5000,
@@ -34,18 +36,6 @@ function Mapa() {
       theme: "light",
     });
 
-    const correctMessage = () => toast.success('Hoja de ruta generada correctamente.', {
-      position: "bottom-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-      });
-
-  
     const errorMessage = () => toast.warn('Error, intente nuevamente mas tarde!', {
       position: "bottom-right",
       autoClose: 5000,
@@ -105,15 +95,16 @@ function Mapa() {
   let arrayInspectores = [];
   inspectores?.map((e)=> {
     let option = {
-      label : e.nombre.toUpperCase() +" "+ e.apellido.toUpperCase(),
-      value : e.id,
-      legajo : e.legajo
+      label : `${e.nombre.toUpperCase()} ${e.apellido.toUpperCase()}` ,
+      value : e.legajo,
+  
     }
     arrayInspectores.push(option);
   })
   arrayInspectores = arrayInspectores.sort()
 
-  const resetFields = () => {
+  const resetFields = (id) => {
+    window.open(`/verhojaruta/${id}`, '_blank')
     window.location.reload()
     // correctMessage()
     // setObservaciones('')
@@ -161,8 +152,9 @@ function Mapa() {
   
   const sendDatos = async() => {
     if(itemSeleccionados.length > 0){
-      const postForm = await fetch('http://128.0.204.47:8010/nuevaHojaDeRuta/', {method: 'POST', body: JSON.stringify({posicion_inicial: posicionInicial, comercios: itemSeleccionados, observaciones: observaciones})})
-      postForm.status === 200 ? resetFields(): errorMessage()
+      const postForm = await fetch('http://128.0.204.47:8010/nuevaHojaDeRuta/', {method: 'POST', body: JSON.stringify({posicion_inicial: posicionInicial, comercios: itemSeleccionados,inspectores: inspectoresSeleccionados, observaciones: observaciones})})
+      const res = await postForm.json()
+      postForm.status === 200 ? resetFields(res.id_hoja_de_ruta): errorMessage()
     
     } else {
         emptyFields()
@@ -197,24 +189,46 @@ function Mapa() {
         console.log('Error: '+err.toString())
       });    
   }
+
   const getOficios = async () => {
     await getAPI ('http://128.0.204.47:8010/oficios/',setOficios)
   }
 
-  const getComercios = async (e) => {
-    // await getAPI ('https://bahia.gob.ar/comercios/datos/xcomerciosxcategoria.php?ac='+e,setComercios,false)
-    const res = await fetch('https://bahia.gob.ar/comercios/datos/xcomerciosxcategoria.php?ac='+e)
-    const json = await res.json()
-    
-    setComercios([...json])
+  const getComercios = async () => {
+      setComercios([])
+      let form = new FormData();
+      form.append('ids',JSON.stringify())
+      await fetch('http://128.0.203.119/comercios/datos/comerciosxcategoriavs.php', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(subCatSeleccionada),
+      })
+        .then(async (response) => {
+          if (response.status !== 200) {
+            throw new Error(response.statusText);
+          }
+  
+          let data = await response.json();
+          setComercios(data)
+  
+        })
+        .then(() => {
+          console.log('query ejecutada')
+        })
+        .catch((err) => {
+          console.log('Error: '+err.toString())
+        });    
+    }
+  
 
-  }
 
   const getInspectores = async (e) => {
     await getAPI ('http://128.0.203.119/comercios/datos/inspectores_fiscalizacion.php',setInspectores,false)
   }
 
-  console.log(comercios)
 
   const getInformacionInicial = async () => {
     await getAPI ('http://128.0.204.47:8010/filterbyParams/8000/BLANDENGUES/152',setPosicionInicial)
@@ -226,7 +240,6 @@ function Mapa() {
     getOficios()
     getInspectores()
   }, [])
-  console.log(arrayInspectores)
 
   if(!categorias || !posicionInicial || !oficios){
     return null
@@ -237,72 +250,55 @@ function Mapa() {
       <h3 className='m-3'>PLANIFICADOR DE FISCALIZACIÓN</h3>
       <div className="contenedor p-2">
         <Row>    {/* ACA TENEMOS EL SELECTOR DE LOS RUBROS*/}
-          <Col className="col-5" >
+          <Col className="col-4" >
             <Form> 
                 <Form.Group className="m-3">
                     <Form.Label>Actividad: </Form.Label>
-                    {/* <Form.Select onChange={getSubcategorias}>
-                    {categorias.map(option =>
-                      <option key={option.value} value={option.value}>{option.text.toUpperCase()}</option>
-                    )};
-                  </Form.Select> */}
                   <MultiSelect options={categorias} onChange={(e) => setCategoriasSeleccionadas(e)}/>
                 </Form.Group>
             </Form>
           </Col>
-          <Col className="col-1 mt-5">
-            <Button variant="success" onClick={(e) => getSubcategorias(e)}>Buscar</Button>{' '}
+          <Col className="col-1 mt-5"style={{textAlign: "left", padding: "0px"}}>
+            <Button variant="success" onClick={(e) => getSubcategorias(e)} style={{padding: "6px 14px"}} >Buscar</Button>{' '}
           </Col>
-          <Col className="col-5" >
+          <Col className="col-4" >
             <Form>
                 <Form.Group className="m-3">
                     <Form.Label>Sub-Actividad: </Form.Label>
-                    {/* <Form.Select id="selectComercios" onChange={() => getComercios()}>
-                    {subCategorias?.map(option =>
-                      <option key={option.ACTIVIDAD_CODIGO} value={option.ACTIVIDAD_CODIGO}>{option.ACTIVIDAD_DESCRIPCION.toUpperCase()}</option>
-                    )};
-                  </Form.Select> */}
-                 <MultiSelect options={subCategorias} onChange={(e) => e.map((e) => getComercios(e.value)) }/>
+                 <MultiSelect options={subCategorias} onChange={(e) => setSubCatSeleccionada(e)}/>
 
                   
                 </Form.Group>
             </Form>
           </Col>
-          <Col className="col-1 mt-5">
-            <Button variant="success" onClick={()=> getComerciosInArea(coordinates)}>Filtrar</Button>{' '}
+          <Col className="col-1 mt-5" style={{textAlign: "left", padding: "0px"}}>
+          <Button variant="success" onClick={(e) => getComercios(e)} >Ver Mapa</Button>{' '}
+          </Col>
+          <Col className="col-2 mt-5">
+          <Button variant="success" onClick={()=> getComerciosInArea(coordinates)}style={{padding: "6px 22px"}}>Filtrar</Button>{' '}
           </Col>
         </Row>
         <Row>     {/* ACA TENEMOS EL MAPA Y LOS FILTROS*/}
-          <Col className='col-8'> 
+          <Col className='col-12'> 
           <MapContainer  center={[posicionInicial?.LATITUD, posicionInicial?.LONGITUD]} zoom={13} style={{ height: '500px', width: '100%', zIndex: "0" }}>
             <TileLayer
               attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             /><AreaSelect />
-           {/* {comercios?.map((e) => e.map((j,i ) => (
-            <Marker icon={blueIcon}  key={i} position={[j?.latitud, j?.longitud]}>
-            <Popup>
-              <center><strong> {j?.NOMBRE_FANTASIA.toUpperCase()} </strong> <br/> {j?.DOMICILIO.toUpperCase().split('(')[0]}</center>
-            </Popup>
-          </Marker>
-           ) )
-              
-            )}; */}
-            {comercios?.map((e,i) => (
+           {comercios?.map((e, i) => 
             <Marker icon={blueIcon}  key={i} position={[e?.latitud, e?.longitud]}>
             <Popup>
               <center><strong> {e?.NOMBRE_FANTASIA.toUpperCase()} </strong> <br/> {e?.DOMICILIO.toUpperCase().split('(')[0]}</center>
             </Popup>
           </Marker>
-            )
+       
               
-            )};
+            )}; 
             {
-              
               oficios?.map((e,i) =>
               <Marker icon={e.TIPO == "OFICIO" ? greenIcon: redIcon} key={i} position={[e?.latitud, e?.longitud]} style={{color:'red !important'}}>
               <Popup>
-                <center><strong> {"OFICIO / DENUNCIA 0800"} </strong> <br/> {e?.CALLE.toUpperCase()}  {e?.ALTURA.toUpperCase()} </center>
+                <center><strong> {e.TIPO == "OFICIO" ? "OFICIO": "0800"}  </strong> <br/> {e?.CALLE.toUpperCase()}  {e?.ALTURA.toUpperCase()} </center>
               </Popup>
             </Marker>
             )}; 
@@ -334,18 +330,18 @@ function Mapa() {
         </Row>
         <Row>          {/* ACA TENEMOS EL SELECTOR DE LOS COMERCIOS DENTRO DEL AREA*/}
           <Col  className='text-center mt-1'>
-                <span hidden>SELECCIONE LOS COMERCIOS A INSPECCIONAR</span>
+                <h4 style={{marginTop: "35px"}}>SELECCIONE LOS COMERCIOS A INSPECCIONAR</h4>
                 <Table className='mt-5'>
                   <thead>
                     <tr>
-                      <th width="20"></th>
+                      <th width="20" ></th>
                       <th width="260">COMERCIO</th>
                       <th width="260">RUBRO</th>
                       <th width="260">DIRECCION</th>
                     </tr>
                   </thead>
                   <tbody id='seleccionador-comercios'>         
-                    {/* {comercios?.map((e,i) =>
+                    {comercios?.map((e,i) =>
                       <tr key={i}>
                         <td>
                           <Form.Check // prettier-ignore
@@ -365,7 +361,7 @@ function Mapa() {
                           {e?.DOMICILIO.toUpperCase().split(')')[0]+')'}
                         </td>
                       </tr>
-                    )} */}
+                    )}  
                     {oficios?.map((e,i) =>
                       <tr key={i}> 
                         <td>
@@ -391,15 +387,11 @@ function Mapa() {
                 </Table>
           </Col>
         </Row>
-        <Row>    {/* ACA TENEMOS EL SELECTOR DE LOS INSPECTORES Y EL GENERADOR DE LA HOJA DE RUTA*/}
+        <Row style = {{marginTop: "20px"}}>    {/* ACA TENEMOS EL SELECTOR DE LOS INSPECTORES*/}
           <Col className='col-3'> {/* SELECCIONAMOS LOS INSPECTORES */}
           <Form.Group className="mb-3">
           <Form.Label>Inspectores</Form.Label>
-          <MultiSelect options={arrayInspectores} onChange={(e) => console.log(e)}/>
-            {/* <Form.Label>Seleccione un Inspector</Form.Label>
-              <Form.Select>
-                <option value="1">Inspector Martínez P.</option>
-              </Form.Select> */}
+          <MultiSelect options={arrayInspectores} onChange={(e)=>setInspectoresSeleccionados(e)}/>
             </Form.Group>
           </Col>
           <Col className='col-9'>
@@ -411,7 +403,7 @@ function Mapa() {
         </Row>
         <Row>
           <Col className='col-12'>
-          <Button variant="success" onClick={()=> sendDatos()}>Generar Hoja de Ruta</Button>{' '}
+          <Button variant="success" onClick={()=> sendDatos()} style={{ marginTop: "15px",padding: "10px 30px", fontSize: "18px"}}>Generar Hoja de Ruta</Button>{' '}
           </Col>
         </Row>
 

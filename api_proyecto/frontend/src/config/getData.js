@@ -5,5 +5,5 @@ const getAPI = async (url,setEstado,python = true) => {
     const resAPI2 = await resAPI.json()
     python ? setEstado(resAPI2.data) : setEstado(resAPI2)
 }
-
 export default getAPI
+
